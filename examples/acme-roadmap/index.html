@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Acme roadmap</title>
+<script>
+  // The viewer lives in its own repo; this repo only holds the data.
+  // Extra query params (theme, zoom, view, task) are passed through.
+  const VIEWER = 'https://aaronp.github.io/gantt/';
+  const src = new URL('ROADMAP.md', location.href).href;
+  location.replace(VIEWER + '?src=' + encodeURIComponent(src) + location.search.replace(/^\?/, '&') + location.hash);
+</script>
+<a href="ROADMAP.md">ROADMAP.md</a>
