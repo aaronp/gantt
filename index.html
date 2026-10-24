@@ -67,7 +67,7 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
         <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
       </button>
     </sc-if>
-    <span title="{{srcTitle}}" style="flex: none; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-radius: 6px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 12px; font-weight: 500; background: {{statusBg}}; color: {{statusFg}}">
+    <span title="{{srcTitle}}. {{statusTip}}" style="flex: none; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-radius: 6px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 12px; font-weight: 500; background: {{statusBg}}; color: {{statusFg}}">
       <span style="width: 6px; height: 6px; border-radius: 3px; background: {{statusDot}}"></span>{{statusLabel}}
     </span>
   </div>
@@ -115,6 +115,23 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
     <button class="tb" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0" onClick="{{download}}" aria-label="Download {{fileName}}" title="Download {{fileName}}">
       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
     </button>
+    <div onKeyDown="{{onSaveKey}}" style="position: relative">
+      <button class="tb" onClick="{{toggleSave}}" aria-haspopup="true" aria-expanded="{{saveOpen}}" aria-label="Save in this browser" title="Save in this browser" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg>
+      </button>
+      <sc-if value="{{saveOpen}}" hint-placeholder-val="{{false}}">
+        <div onClick="{{closeSave}}" style="position: fixed; inset: 0; z-index: 39"></div>
+        <div role="dialog" aria-label="Save in this browser" style="position: absolute; z-index: 40; top: calc(100% + 6px); right: 0; width: 300px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)">
+          <label for="save-name" style="font-size: 12px; font-weight: 600; color: var(--muted)">Save in this browser as</label>
+          <div style="display: flex; gap: 6px">
+            <input id="save-name" value="{{saveName}}" onChange="{{onSaveName}}" autoFocus="{{true}}" autocomplete="off" style="flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid var(--control); border-radius: 8px; font: inherit; font-size: 13px">
+            <button onClick="{{doSave}}" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: var(--ink); color: var(--on-ink); font-size: 13px; font-weight: 600; cursor: pointer">{{saveLabel}}</button>
+          </div>
+          <sc-if value="{{hasSaveError}}" hint-placeholder-val="{{false}}"><span role="alert" style="font-size: 12px; color: var(--bad)">{{saveError}}</span></sc-if>
+          <span style="font-size: 11.5px; line-height: 1.45; color: var(--muted)">Kept in this browser only, so reopen it from <strong>Open</strong> here. Download the file to keep it anywhere else.</span>
+        </div>
+      </sc-if>
+    </div>
     <div role="group" aria-label="Theme" style="display: flex; align-items: center; gap: 4px">
       <sc-for list="{{themes}}" as="th" hint-placeholder-count="4">
         <button class="tb" onClick="{{th.pick}}" aria-pressed="{{th.pressed}}" aria-label="{{th.label}} theme" title="{{th.label}}" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 6px; border: 1px solid {{th.bd}}; border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer">
@@ -468,6 +485,25 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
         <span style="font-size: 13px">Drop a .md file here, or</span>
         <label class="tb" style="position: relative; height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer">Choose file…<input type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" onChange="{{onPickFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden"></label>
       </div>
+      <sc-if value="{{hasLocalSaves}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 12px; font-weight: 600; color: var(--muted)">Saved in this browser</span>
+          <div style="display: flex; flex-direction: column; max-height: 220px; overflow: auto; border: 1px solid var(--rule); border-radius: 10px">
+            <sc-for list="{{localSaves}}" as="ls" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-bottom: 1px solid var(--rule-soft)">
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+                  <span style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ls.name}}</span>
+                  <span style="font-size: 11.5px; color: var(--muted)">{{ls.meta}}</span>
+                </span>
+                <button class="tb" onClick="{{ls.open}}" aria-label="{{ls.openLabel}}" style="flex: none; height: 30px; padding: 0 12px; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer">Open</button>
+                <button class="tb" onClick="{{ls.del}}" aria-label="{{ls.delLabel}}" title="{{ls.delLabel}}" style="flex: none; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--bad); cursor: pointer; padding: 0">
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
       <div style="display: flex; flex-direction: column; gap: 6px">
         <label for="open-url" style="font-size: 12px; font-weight: 600; color: var(--muted)">Or open from a URL</label>
         <div style="display: flex; gap: 8px">
@@ -981,6 +1017,10 @@ const THEMES = [
 const THEME_KEY = 'gantt:theme';
 const storedTheme = () => { try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; } };
 const pick = (v, ids, dflt) => (ids.includes(v) ? v : dflt);
+/* Named saves in this browser: { name: { md, savedAt } } under one key. Storage can be unavailable (private mode). */
+const SAVES_KEY = 'gantt:saves';
+const readSaves = () => { try { const v = JSON.parse(localStorage.getItem(SAVES_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } };
+const writeSaves = (saves) => localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
 /** The plan to start from: the ?src= file if it parses, else an empty plan with the error shown in the Open dialog. */
 const START = (() => {
   const md = BOOT.md ?? SAMPLE_MD;
@@ -1008,6 +1048,7 @@ class Component extends DCLogic {
     query: QUERY.get('q') ?? '',
     linkName: '', linkUrl: '', linkError: '',
     titleEditing: false, titleDraft: '', tagDraft: '', tagsOpen: false,
+    saveOpen: false, saveName: '', saveError: '', savedName: null,
     tagFilter: (QUERY.get('tags') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
     openOpen: START.error !== null, openUrl: '', openError: START.error ?? '', openBusy: false, dropActive: false,
     selectedId: QUERY.get('task'), drag: null, reorder: null, newGroupIdx: null,
@@ -1042,7 +1083,7 @@ class Component extends DCLogic {
     }
     const md = G.serialize(doc);
     this.setState({
-      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null,
+      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, savedName: null,
       selectedId: null, drag: null, reorder: null, confirm: null, editing: false, draft: '', copied: `Opened ${label}`, nameError: null,
       openOpen: false, openBusy: false, openError: '', openUrl: '', dropActive: false,
     });
@@ -1085,6 +1126,29 @@ class Component extends DCLogic {
     if (!/^https?:$/.test(url.protocol)) { this.setState({ linkError: 'Links must be http or https.' }); return; }
     const label = (this.state.linkName.trim() || url.hostname).replace(/[\[\]`]/g, '');
     this.commit(G.ops.addLink(this.state.doc, id, label, url.href.replace(/[()\s]/g, encodeURIComponent)), null, { linkName: '', linkUrl: '', linkError: '' });
+  }
+  /* Save in this browser under a name; the badge then compares against that save. */
+  saveLocal() {
+    const name = this.state.saveName.trim();
+    if (name === '') { this.setState({ saveError: 'Give the save a name.' }); return; }
+    const md = G.serialize(this.state.doc);
+    try { writeSaves({ ...readSaves(), [name]: { md, savedAt: new Date().toISOString() } }); } catch (e) {
+      this.setState({ saveError: `This browser won’t store it (${e.message}). Download the file instead.` });
+      return;
+    }
+    this.setState({ baseMd: md, savedName: name, saveOpen: false, saveError: '', copied: `Saved “${name}” in this browser` });
+  }
+  openLocal(name) {
+    const save = readSaves()[name];
+    if (!save) { this.setState({ openError: `There is no save called “${name}” in this browser any more.` }); return; }
+    this.openText(save.md, name, false);
+    if (this.state.srcLabel === name) this.setState({ savedName: name, copied: `Opened “${name}” from this browser` });
+  }
+  deleteLocal(name) {
+    if (typeof confirm === 'function' && !confirm(`Delete the save “${name}” from this browser?`)) return;
+    const { [name]: _, ...rest } = readSaves();
+    try { writeSaves(rest); } catch (e) { this.setState({ openError: `Couldn’t delete it: ${e.message}` }); return; }
+    this.setState({ savedName: this.state.savedName === name ? null : this.state.savedName, openError: '' });
   }
   saveTitle() {
     const s = this.state;
@@ -1550,7 +1614,7 @@ class Component extends DCLogic {
 
     return {
       title, src, fileName, relColor: rel, fixedColor: fix,
-      theme: s.theme, srcTitle: s.srcLabel === null ? 'Showing the built-in sample plan' : `Showing ${s.srcLabel}`,
+      theme: s.theme, srcTitle: s.srcLabel === null ? 'Showing the built-in sample plan' : s.savedName === s.srcLabel ? `Showing “${s.srcLabel}” saved in this browser` : `Showing ${s.srcLabel}`,
       query: s.query, hasQuery: terms.length > 0, hasFilter: filterOn, matchNote: `${hits.size} of ${tasks.length}`,
       /* Tags filter: every tag in the plan (and any chosen one that has gone), with how many tasks carry it. */
       tagsOpen: s.tagsOpen, tagsExpanded: String(s.tagsOpen), hasTagFilter: s.tagFilter.length > 0,
@@ -1593,7 +1657,29 @@ class Component extends DCLogic {
       onOpenUrlInput: (e) => this.setState({ openUrl: e.target.value, openError: '' }),
       onOpenUrlKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.openUrl(); } },
       openFromUrl: () => this.openUrl(),
-      statusLabel: dirty ? `${s.past.length} edit${s.past.length === 1 ? '' : 's'} · not saved to source` : 'Matches source',
+      /* Compared with the last save in this browser, or with the file as loaded. */
+      statusLabel: dirty ? 'Unsaved changes' : s.savedName !== null ? `Saved as “${s.savedName}”` : 'No unsaved changes',
+      statusTip: dirty
+        ? 'Changes are only in this tab. Save keeps them in this browser; Download or Copy keeps the file.'
+        : s.savedName !== null ? `Matches the save “${s.savedName}” in this browser.` : 'Matches the plan as it was opened.',
+      saveOpen: s.saveOpen, saveName: s.saveName, saveError: s.saveError, hasSaveError: s.saveError !== '',
+      saveExists: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()),
+      saveLabel: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()) ? 'Replace' : 'Save',
+      toggleSave: () => this.setState({ saveOpen: !s.saveOpen, saveError: '', saveName: s.saveName || s.savedName || title }),
+      closeSave: () => this.setState({ saveOpen: false, saveError: '' }),
+      onSaveName: (e) => this.setState({ saveName: e.target.value, saveError: '' }),
+      onSaveKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.saveLocal(); } else if (e.key === 'Escape') { e.stopPropagation(); this.setState({ saveOpen: false }); } },
+      doSave: () => this.saveLocal(),
+      localSaves: Object.entries(readSaves()).sort((a, b) => String(b[1].savedAt).localeCompare(String(a[1].savedAt))).map(([name, v]) => {
+        let n = null;
+        try { n = G.tasksOf(G.parse(v.md)).length; } catch (e) { n = null; }
+        const when = new Date(v.savedAt);
+        return {
+          name, meta: `${n === null ? 'can’t be read' : `${n} task${n === 1 ? '' : 's'}`} · saved ${isNaN(when) ? '' : `${when.getDate()} ${G.MON[when.getMonth()]} ${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`}`,
+          open: () => this.openLocal(name), del: () => this.deleteLocal(name), delLabel: `Delete the save ${name}`, openLabel: `Open ${name}`,
+        };
+      }),
+      hasLocalSaves: Object.keys(readSaves()).length > 0,
       statusBg: dirty ? 'var(--warn-bg)' : 'var(--ok-bg)', statusFg: dirty ? 'var(--warn-fg)' : 'var(--ok-fg)', statusDot: dirty ? 'var(--warn-dot)' : 'var(--ok-dot)',
       undo: () => {
         const p = s.past; if (!p.length) return;

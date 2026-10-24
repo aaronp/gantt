@@ -54,6 +54,10 @@ Sources on another host must allow CORS. GitHub Pages and
 enter a URL. A URL stays in the address bar as `?src=`.
 Beside it, **New** starts a fresh plan (asking first if you have unsaved
 edits), **Copy** puts the markdown on the clipboard, and **Download** saves it.
+**Save** keeps the plan in this browser under a name you choose; reopen it from
+**Open** → *Saved in this browser*, where saves can also be deleted. The badge in
+the header tells you whether the chart has changes that aren't saved anywhere
+yet. Browser saves stay on this device; download the file to keep it in git.
 
 ## Viewing locally
 
