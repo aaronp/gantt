@@ -35,7 +35,7 @@ tasks whose **end** it follows, or `with:` the tasks whose **start** it follows.
 
 | Query | Values |
 | --- | --- |
-| `src` | The plan to load: absolute, or relative to the page. Without it, the built-in sample is shown. |
+| `src` | The plan to load: absolute, or relative to the page. Without it, a blank plan is shown. |
 | `theme` | `paper` (default), `night`, `blueprint`, `warm`. It also remembers your last choice in the browser. |
 | `zoom` | `day` (default) or `week` |
 | `view` | `split` (default: chart and markdown) or `chart` |

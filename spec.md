@@ -2,7 +2,12 @@
 
 A plan is one markdown file, read line by line. A line is one of:
 
-- `# Title`: the plan's title (the first one is shown in the header);
+- `# Title`: the plan's title (the first one is shown in the header). It can
+  carry display preferences as attributes, e.g.
+  ``# Launch plan `theme:night` `view:chart` ``: `theme` is `paper`, `night`,
+  `blueprint` or `warm`; `view` is `split` or `chart`. They apply when the
+  address bar doesn't set `?theme=` or `?view=`, and picking a theme or view
+  writes them back;
 - `## Section`: starts a section, which groups the tasks under it;
 - a **task**: a list item carrying an `` `id:` `` attribute;
 - anything else (notes, blank lines, other lists, `###` headings), which is

@@ -428,7 +428,8 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
   </section>
 
   <sc-if value="{{isSplit}}" hint-placeholder-val="{{true}}">
-    <section aria-label="Markdown source" style="flex: 1 1 380px; max-width: 100%; min-width: 0; height: 100%; min-height: 320px; display: flex; flex-direction: column; background: #1B1C1F; color: #E6E4DF; border-left: 1px solid #0E0F10">
+    <section aria-label="Markdown source" style="position: relative; flex: 0 0 {{mdW}}px; max-width: 100%; min-width: 0; height: 100%; min-height: 320px; display: flex; flex-direction: column; background: #1B1C1F; color: #E6E4DF; border-left: 1px solid #0E0F10">
+      <div role="separator" aria-orientation="vertical" aria-label="Resize the markdown panel" aria-valuenow="{{mdW}}" tabIndex="0" onPointerDown="{{mdResizeDown}}" onPointerMove="{{mdResizeMove}}" onPointerUp="{{mdResizeUp}}" onPointerCancel="{{mdResizeUp}}" onKeyDown="{{mdResizeKey}}" style="position: absolute; z-index: 3; top: 0; bottom: 0; left: -4px; width: 8px; cursor: col-resize; touch-action: none"></div>
       <div style="flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px 10px 16px; border-bottom: 1px solid #2C2D31">
         <span style="flex: 1; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">{{fileName}}</span>
         <sc-if value="{{notEditing}}" hint-placeholder-val="{{true}}">
@@ -694,12 +695,23 @@ const G = (() => {
     return out;
   };
 
+  /* Display preferences ride on the title line as attributes: "# Plan `theme:night` `view:chart`". */
+  const PREF_KEYS = ['theme', 'view'];
+  const PREF_RE = /\s*`(theme|view):([^`\s]+)`/g;
+  const parseTitle = (text) => {
+    const prefs = {};
+    for (const m of text.matchAll(PREF_RE)) prefs[m[1]] = m[2];
+    return { text: text.replace(PREF_RE, '').trim(), prefs };
+  };
+  const prefsOf = (doc) => (doc.items.find((i) => i.kind === 'title') || { prefs: {} }).prefs;
+
   const parse = (md) => {
     if (typeof md !== 'string') throw new Error('bug: parse expects a string');
     const items = md.split('\n').map((text, i) => {
       const line = i + 1;
       const h = /^(#{1,2})\s+(.*)$/.exec(text);
-      if (h) return { kind: h[1] === '#' ? 'title' : 'group', text: h[2].trim(), line };
+      if (h && h[1] === '#') return { kind: 'title', ...parseTitle(h[2]), line };
+      if (h) return { kind: 'group', text: h[2].trim(), line };
       const t = TASK_RE.exec(text);
       if (!t || !t[3].includes('`id:')) return { kind: 'raw', text, line };
       return { kind: 'task', line, task: at(line, () => parseTask(t)) };
@@ -731,7 +743,7 @@ const G = (() => {
     return `${t.indent}- ${t.box ? `[${t.done ? 'x' : ' '}] ` : ''}${t.name} ${attrs.join(' ')}${links}`;
   };
   const serialize = (doc) => doc.items.map((i) => {
-    if (i.kind === 'title') return `# ${i.text}`;
+    if (i.kind === 'title') return [`# ${i.text}`, ...PREF_KEYS.filter((k) => i.prefs[k]).map((k) => `\`${k}:${i.prefs[k]}\``)].join(' ');
     if (i.kind === 'group') return `## ${i.text}`;
     if (i.kind === 'raw') return i.text;
     if (i.kind === 'task') return serializeTask(i.task);
@@ -844,7 +856,12 @@ const G = (() => {
     setTitle: (doc, text) => {
       const k = doc.items.findIndex((i) => i.kind === 'title');
       if (k >= 0) return { ...doc, items: doc.items.map((i, j) => (j === k ? { ...i, text } : i)) };
-      return insertItems(doc, 0, [{ kind: 'title', text, line: null }, { kind: 'raw', text: '', line: null }]);
+      return insertItems(doc, 0, [{ kind: 'title', text, prefs: {}, line: null }, { kind: 'raw', text: '', line: null }]);
+    },
+    /* Sets a display preference on the title line, adding an "Untitled plan" title if there is none. */
+    setPref: (doc, key, value) => {
+      const d = doc.items.some((i) => i.kind === 'title') ? doc : ops.setTitle(doc, 'Untitled plan');
+      return { ...d, items: d.items.map((i) => (i.kind === 'title' && i === d.items.find((x) => x.kind === 'title') ? { ...i, prefs: { ...i.prefs, [key]: value } } : i)) };
     },
     addLink: (doc, id, label, url) => mapTask(doc, id, (t) => ({ ...t, links: [...t.links, { label, url }] })),
     removeLink: (doc, id, index) => mapTask(doc, id, (t) => ({ ...t, links: t.links.filter((_, k) => k !== index) })),
@@ -974,35 +991,13 @@ const G = (() => {
     })];
   };
 
-  return { parse, serialize, schedule, ops, applyDrag, tasksOf, depsOf, TAG_RE, layout, dropSlot, dependentsOf, downstream, predecessorsOf, sectionTaskIds, findTask, dependsOn, changedLines, tokenize, dayFromIso, isoFromDay, dow, parts, fmt, MON };
+  return { parse, serialize, prefsOf, schedule, ops, applyDrag, tasksOf, depsOf, TAG_RE, layout, dropSlot, dependentsOf, downstream, predecessorsOf, sectionTaskIds, findTask, dependsOn, changedLines, tokenize, dayFromIso, isoFromDay, dow, parts, fmt, MON };
 })();
 
-const SAMPLE_MD = [
-  '# Atlas mobile app — v2 launch',
-  '',
-  'Tasks are list items carrying an `id:`. Everything else in this file is kept exactly as written.',
-  '',
-  '## Discovery',
-  '- [x] Stakeholder interviews `id:interviews` `start:2026-10-19` `dur:4d`',
-  '- [x] Requirements brief `id:brief` `after:interviews` `dur:3d`',
-  '',
-  '## Design',
-  '- [ ] Wireframes `id:wire` `after:brief` `dur:5d`',
-  '- [ ] Visual design `id:visual` `after:wire+1d` `dur:6d`',
-  '- [ ] Design review `id:review` `start:2026-11-12` `after:visual` `dur:1d`',
-  '',
-  '## Build',
-  '- [ ] API endpoints `id:api` `after:brief+2d` `dur:9d`',
-  '- [ ] App screens `id:screens` `after:review,api` `dur:10d`',
-  '- [ ] QA pass `id:qa` `after:screens` `dur:5d`',
-  '',
-  '## Launch',
-  '- [ ] Store submission `id:submit` `after:qa` `dur:2d`',
-  '- [ ] Public launch `id:launch` `start:2026-12-14` `after:submit` `dur:0d`',
-  '',
-].join('\n');
+/** A blank plan: what the page opens with when there is no ?src=, and what New plan starts. */
+const newPlanMd = (today) => `# Untitled plan\n\n## Tasks\n- [ ] First task \`id:task-1\` \`start:${G.isoFromDay(today)}\` \`dur:3d\`\n`;
 
-/* ---------- Start-up: the fetched plan (or the sample), today, and the address-bar settings ---------- */
+/* ---------- Start-up: the fetched plan (or a blank one), today, and the address-bar settings ---------- */
 const BOOT = window.GANTT_BOOT ?? { md: null, src: null, error: null };
 const QUERY = new URLSearchParams(location.search);
 const localIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1021,9 +1016,13 @@ const pick = (v, ids, dflt) => (ids.includes(v) ? v : dflt);
 const SAVES_KEY = 'gantt:saves';
 const readSaves = () => { try { const v = JSON.parse(localStorage.getItem(SAVES_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } };
 const writeSaves = (saves) => localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+/* The markdown panel's width, remembered in this browser and kept between 240px and leaving the timeline 320px. */
+const MD_W_KEY = 'gantt:md-width';
+const clampMdW = (w) => Math.round(Math.max(240, Math.min(w, window.innerWidth - 320)));
+const storedMdW = () => { try { return Number(localStorage.getItem(MD_W_KEY)) || 380; } catch (e) { return 380; } };
 /** The plan to start from: the ?src= file if it parses, else an empty plan with the error shown in the Open dialog. */
 const START = (() => {
-  const md = BOOT.md ?? SAMPLE_MD;
+  const md = BOOT.md ?? newPlanMd(TODAY);
   if (BOOT.error !== null) return { doc: G.parse(''), md: '', error: BOOT.error };
   try { const doc = G.parse(md); return { doc, md: G.serialize(doc), error: null }; } catch (e) { return { doc: G.parse(''), md: '', error: `Can’t show ${BOOT.src ?? 'the plan'} — ${e.message}` }; }
 })();
@@ -1042,9 +1041,9 @@ const FIX_TEXT = 'var(--on-fixed)';
 class Component extends DCLogic {
   state = {
     doc: START.doc, past: [], future: [], prevMd: START.md, lastKey: null, baseMd: START.md,
-    /* srcLabel: what the header shows (a URL, a file name, or null for the sample); srcParam: the ?src= to keep in the address bar. */
-    srcLabel: BOOT.src, srcParam: BOOT.src,
-    theme: pick(QUERY.get('theme') ?? storedTheme(), THEMES.map((t) => t.id), 'paper'),
+    /* srcLabel: what the header shows (a URL, or a file name); srcParam: the ?src= to keep in the address bar. */
+    srcLabel: BOOT.src ?? 'untitled.md', srcParam: BOOT.src,
+    theme: pick(QUERY.get('theme') ?? G.prefsOf(START.doc).theme ?? storedTheme(), THEMES.map((t) => t.id), 'paper'),
     query: QUERY.get('q') ?? '',
     linkName: '', linkUrl: '', linkError: '',
     titleEditing: false, titleDraft: '', tagDraft: '', tagsOpen: false,
@@ -1052,10 +1051,19 @@ class Component extends DCLogic {
     tagFilter: (QUERY.get('tags') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
     openOpen: START.error !== null, openUrl: '', openError: START.error ?? '', openBusy: false, dropActive: false,
     selectedId: QUERY.get('task'), drag: null, reorder: null, newGroupIdx: null,
-    zoom: pick(QUERY.get('zoom'), ['day', 'week'], 'day'), layout: pick(QUERY.get('view'), ['chart', 'split'], 'split'),
+    zoom: pick(QUERY.get('zoom'), ['day', 'week'], 'day'), layout: pick(QUERY.get('view') ?? G.prefsOf(START.doc).view, ['chart', 'split'], 'split'),
     confirm: null, policy: 'unlink', sectionMode: 'keep',
     editing: false, draft: '', copied: null, nameError: null,
+    mdW: clampMdW(storedMdW()), mdResize: null,
   };
+
+  /** Theme and view to switch to when the plan's own preferences change from `prev` to `next` (all of them when prev is null). */
+  prefState(prev, next) {
+    const a = prev ? G.prefsOf(prev) : {}; const b = G.prefsOf(next); const out = {};
+    if (b.theme !== a.theme && THEMES.some((t) => t.id === b.theme)) out.theme = b.theme;
+    if (b.view !== a.view && ['chart', 'split'].includes(b.view)) out.layout = b.view;
+    return out;
+  }
 
   commit(next, key, extra) {
     const s = this.state;
@@ -1068,11 +1076,17 @@ class Component extends DCLogic {
       lastKey: key,
       copied: null,
       newGroupIdx: null,
+      ...this.prefState(s.doc, next),
       ...(extra || {}),
     });
   }
 
   today() { return TODAY; }
+  /** Adds a task, selects it and puts the cursor in its name, ready to type over. */
+  commitNewTask(r2) {
+    this.commit(r2.doc, null, { selectedId: r2.id });
+    setTimeout(() => { const el = document.getElementById('insp-name'); if (el) { el.focus(); el.select(); } });
+  }
 
   /* Open: replace the plan with a parsed file. A file that does not parse leaves the plan alone and shows why. */
   openText(text, label, fromUrl) {
@@ -1085,7 +1099,7 @@ class Component extends DCLogic {
     this.setState({
       doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, savedName: null,
       selectedId: null, drag: null, reorder: null, confirm: null, editing: false, draft: '', copied: `Opened ${label}`, nameError: null,
-      openOpen: false, openBusy: false, openError: '', openUrl: '', dropActive: false,
+      openOpen: false, openBusy: false, openError: '', openUrl: '', dropActive: false, ...this.prefState(null, doc),
     });
   }
   openFiles(files) {
@@ -1108,7 +1122,7 @@ class Component extends DCLogic {
   newPlan() {
     const dirty = G.serialize(this.state.doc) !== this.state.baseMd;
     if (dirty && typeof confirm === 'function' && !confirm('Start a new plan? Your unsaved edits will be lost (download or copy them first).')) return;
-    this.openText(`# Untitled plan\n\n## Tasks\n- [ ] First task \`id:task-1\` \`start:${G.isoFromDay(TODAY)}\` \`dur:3d\`\n`, 'untitled.md', false);
+    this.openText(newPlanMd(TODAY), 'untitled.md', false);
   }
   download(fileName, md) {
     const a = document.createElement('a');
@@ -1165,12 +1179,38 @@ class Component extends DCLogic {
   }
   setTheme(id) {
     try { localStorage.setItem(THEME_KEY, id); } catch (e) { /* not remembered; the address bar still carries it */ }
-    this.setState({ theme: id });
+    this.commit(G.ops.setPref(this.state.doc, 'theme', id), null, { theme: id });
   }
 
   askDeleteTask(id) { this.setState({ confirm: { kind: 'task', id }, policy: 'unlink', drag: null, reorder: null }); }
   askDeleteSection(idx) { this.setState({ confirm: { kind: 'section', idx }, policy: 'unlink', sectionMode: 'keep', drag: null, reorder: null }); }
-  deleteKey(id, e) { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.askDeleteTask(id); } }
+  /** Delete/Backspace on a task: gone at once (undo restores it) unless other tasks depend on it, which needs the dialog's choice. */
+  deleteKey(id, e) {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    e.preventDefault();
+    const ids = new Set([id]);
+    if (G.dependentsOf(this.state.doc, ids).length) { this.askDeleteTask(id); return; }
+    this.commit(G.ops.deleteTasks(this.state.doc, ids, 'unlink'), null, { selectedId: null, copied: 'Task deleted · undo restores it' });
+  }
+
+  setMdW(w) {
+    const mdW = clampMdW(w);
+    try { localStorage.setItem(MD_W_KEY, String(mdW)); } catch (e) { /* not remembered */ }
+    this.setState({ mdW });
+  }
+  mdResizeDown(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    this.setState({ mdResize: { x0: e.clientX, w0: this.state.mdW } });
+  }
+  /* The panel sits on the right, so dragging its left edge leftwards widens it. */
+  mdResizeMove(e) { const r = this.state.mdResize; if (r) this.setMdW(r.w0 - (e.clientX - r.x0)); }
+  mdResizeKey(e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    this.setMdW(this.state.mdW + (e.key === 'ArrowLeft' ? 24 : -24));
+  }
 
   barDown(id, mode, dw, e) {
     if (e.button !== 0) return;
@@ -1233,7 +1273,7 @@ class Component extends DCLogic {
     const s = this.state;
     const rel = 'var(--rel)';
     const fix = 'var(--fixed)';
-    const src = s.srcLabel ?? 'Built-in sample · click to open your own plan';
+    const src = s.srcLabel ?? 'untitled.md';
     const today = this.today();
     const dw = s.zoom === 'day' ? 32 : 12;
     const committed = G.schedule(s.doc);
@@ -1311,7 +1351,7 @@ class Component extends DCLogic {
           inputId: `section-${r.idx}`, autoFocus: r.idx === s.newGroupIdx,
           addLabel: `Add a task to ${r.name || 'this section'}`,
           onRename: (e) => this.commit(G.ops.renameGroup(s.doc, r.idx, e.target.value), `group:${r.idx}`),
-          onAdd: () => { const r2 = G.ops.addTaskToGroup(s.doc, r.idx, today); this.commit(r2.doc, null, { selectedId: r2.id }); },
+          onAdd: () => this.commitNewTask(G.ops.addTaskToGroup(s.doc, r.idx, today)),
           onFocusSel: (e) => { if (r.idx === s.newGroupIdx) e.target.select(); },
           delLabel: `Delete section ${r.name || '(unnamed)'}`,
           onDelete: () => this.askDeleteSection(r.idx),
@@ -1505,7 +1545,7 @@ class Component extends DCLogic {
         conflictText: sc.conflict ? (late.kind === 'after'
           ? `Pinned ${sc.depsEnd - sc.start} day${sc.depsEnd - sc.start > 1 ? 's' : ''} before “${nameIn(late.id)}” finishes on ${G.fmt(sc.depsEnd - 1)}. Move the date, or unpin to follow it.`
           : `Pinned ${sc.depsEnd - sc.start} day${sc.depsEnd - sc.start > 1 ? 's' : ''} before “${nameIn(late.id)}” starts on ${G.fmt(sc.depsEnd)}. Move the date, or unpin to follow it.`) : '',
-        addFollower: () => { const r2 = G.ops.addTask(s.doc, { afterId: selT.id, today }); this.commit(r2.doc, null, { selectedId: r2.id }); },
+        addFollower: () => this.commitNewTask(G.ops.addTask(s.doc, { afterId: selT.id, today })),
         del: () => this.askDeleteTask(selT.id),
         close: () => this.setState({ selectedId: null, nameError: null }),
       };
@@ -1610,11 +1650,12 @@ class Component extends DCLogic {
     const vc = seg(s.layout === 'chart'); const vsp = seg(s.layout === 'split');
     const dirty = md !== s.baseMd;
     const title = (s.doc.items.find((i) => i.kind === 'title') || { text: 'Untitled plan' }).text;
-    const fileName = s.srcLabel === null ? 'ROADMAP.md' : (s.srcLabel.split('/').pop() || 'plan.md');
+    /* Named after the plan's title, minus characters file systems reject. */
+    const fileName = `${title.replace(/[\\/:*?"<>|\x00-\x1f]/g, '').trim() || 'plan'}.md`;
 
     return {
       title, src, fileName, relColor: rel, fixedColor: fix,
-      theme: s.theme, srcTitle: s.srcLabel === null ? 'Showing the built-in sample plan' : s.savedName === s.srcLabel ? `Showing “${s.srcLabel}” saved in this browser` : `Showing ${s.srcLabel}`,
+      theme: s.theme, srcTitle: s.srcLabel === null ? 'Showing a new plan' : s.savedName === s.srcLabel ? `Showing “${s.srcLabel}” saved in this browser` : `Showing ${s.srcLabel}`,
       query: s.query, hasQuery: terms.length > 0, hasFilter: filterOn, matchNote: `${hits.size} of ${tasks.length}`,
       /* Tags filter: every tag in the plan (and any chosen one that has gone), with how many tasks carry it. */
       tagsOpen: s.tagsOpen, tagsExpanded: String(s.tagsOpen), hasTagFilter: s.tagFilter.length > 0,
@@ -1681,22 +1722,25 @@ class Component extends DCLogic {
       }),
       hasLocalSaves: Object.keys(readSaves()).length > 0,
       statusBg: dirty ? 'var(--warn-bg)' : 'var(--ok-bg)', statusFg: dirty ? 'var(--warn-fg)' : 'var(--ok-fg)', statusDot: dirty ? 'var(--warn-dot)' : 'var(--ok-dot)',
+      mdW: s.mdW,
+      mdResizeDown: (e) => this.mdResizeDown(e), mdResizeMove: (e) => this.mdResizeMove(e), mdResizeKey: (e) => this.mdResizeKey(e),
+      mdResizeUp: () => this.setState({ mdResize: null }),
       undo: () => {
         const p = s.past; if (!p.length) return;
-        this.setState({ doc: p[p.length - 1], past: p.slice(0, -1), future: [s.doc, ...s.future], prevMd: md, lastKey: null, nameError: null });
+        this.setState({ doc: p[p.length - 1], past: p.slice(0, -1), future: [s.doc, ...s.future], prevMd: md, lastKey: null, nameError: null, ...this.prefState(s.doc, p[p.length - 1]) });
       },
       redo: () => {
         const f = s.future; if (!f.length) return;
-        this.setState({ doc: f[0], future: f.slice(1), past: [...s.past, s.doc], prevMd: md, lastKey: null, nameError: null });
+        this.setState({ doc: f[0], future: f.slice(1), past: [...s.past, s.doc], prevMd: md, lastKey: null, nameError: null, ...this.prefState(s.doc, f[0]) });
       },
       cantUndo: s.past.length === 0, cantRedo: s.future.length === 0,
       zoomDay: () => this.setState({ zoom: 'day' }), zoomWeek: () => this.setState({ zoom: 'week' }),
       zoomDayBg: zd.bg, zoomDayFg: zd.fg, zoomDayPressed: zd.pressed, zoomWeekBg: zw.bg, zoomWeekFg: zw.fg, zoomWeekPressed: zw.pressed,
-      viewChart: () => this.setState({ layout: 'chart' }), viewSplit: () => this.setState({ layout: 'split' }),
+      viewChart: () => this.commit(G.ops.setPref(s.doc, 'view', 'chart'), null, { layout: 'chart' }), viewSplit: () => this.commit(G.ops.setPref(s.doc, 'view', 'split'), null, { layout: 'split' }),
       viewChartBg: vc.bg, viewChartFg: vc.fg, viewChartPressed: vc.pressed, viewSplitBg: vsp.bg, viewSplitFg: vsp.fg, viewSplitPressed: vsp.pressed,
       addLabel: selT ? 'Add after selected' : 'Add task',
       addTitle: selT ? `New task starting after “${selT.name}”` : 'New task anchored to today',
-      addTask: () => { const r2 = G.ops.addTask(s.doc, { afterId: selT ? selT.id : null, today }); this.commit(r2.doc, null, { selectedId: r2.id }); },
+      addTask: () => this.commitNewTask(G.ops.addTask(s.doc, { afterId: selT ? selT.id : null, today })),
       onMove: (e) => this.onMove(e), onUp: () => this.onUp(),
       isReordering: !!ro, reorder: reorderView,
       hasDlg: !!dlg, dlg: dlg || {},
@@ -1729,7 +1773,7 @@ class Component extends DCLogic {
 </script>
 <script>
 /* Loader: fetch the plan named by ?src= (absolute, or relative to this page), then boot the runtime.
-   With no ?src= the built-in sample plan is shown. */
+   With no ?src= a blank plan is shown. */
 (async () => {
   const src = new URLSearchParams(location.search).get('src');
   const boot = { md: null, src: null, error: null };
