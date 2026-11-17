@@ -40,7 +40,7 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
 <div class="g-root" data-theme="{{theme}}" style="height: 100vh; display: flex; flex-direction: column; font-family: 'Instrument Sans', system-ui, sans-serif; color: var(--ink); background: var(--bg); font-size: 13px">
 
 <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px; border-bottom: 1px solid var(--rule); background: var(--surface)">
-  <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 0 1 auto">
+  <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 0 0 245px">
     <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22"><rect x="2" y="3" width="10" height="4" rx="1.5" style="fill: var(--rel)"></rect><rect x="8" y="9" width="12" height="4" rx="1.5" style="fill: var(--fixed)"></rect><rect x="4" y="15" width="7" height="4" rx="1.5" style="fill: var(--ink)"></rect></svg>
     <sc-if value="{{titleView}}" hint-placeholder-val="{{true}}">
       <div class="thead" style="display: flex; align-items: center; gap: 2px; min-width: 0">
@@ -53,6 +53,43 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
     <sc-if value="{{titleEditing}}" hint-placeholder-val="{{false}}">
       <label for="plan-title" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Plan title</label>
       <input id="plan-title" value="{{titleDraft}}" onChange="{{onTitleDraft}}" onKeyDown="{{onTitleKey}}" onBlur="{{onTitleBlur}}" autoFocus="{{true}}" autocomplete="off" style="width: min(420px, 60vw); height: 32px; padding: 0 8px; border: 1px solid var(--accent); border-radius: 8px; font: inherit; font-size: 16px; font-weight: 600">
+    </sc-if>
+  </div>
+  <div onKeyDown="{{onFileKey}}" style="position: relative; flex: none">
+    <button class="tb" onClick="{{toggleFile}}" aria-haspopup="true" aria-expanded="{{fileOpen}}" title="New, open, save, download or share the plan" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 8px 0 10px; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer">
+      File<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <sc-if value="{{fileOpen}}" hint-placeholder-val="{{false}}">
+      <div onClick="{{closeFile}}" style="position: fixed; inset: 0; z-index: 39"></div>
+      <div role="menu" aria-label="File" style="position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: 260px; max-width: calc(100vw - 32px); box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)">
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{newPlan}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4M12 11v6M9 14h6"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">New</span>
+        </button>
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{showOpen}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M3 6h6l2 2h10v11H3z"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Open…</span>
+        </button>
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{toggleSave}}" aria-expanded="{{saveOpen}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Save in this browser…</span>
+        </button>
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{download}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Download {{fileName}}</span>
+        </button>
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{copyLink}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Copy link</span>
+        </button>
+        <sc-if value="{{hasLinkNote}}" hint-placeholder-val="{{false}}"><span role="status" style="padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: {{linkNoteColor}}">{{linkNote}}</span></sc-if>
+        <sc-if value="{{saveOpen}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 8px 4px 4px; border-top: 1px solid var(--rule-soft)">
+            <label for="save-name" style="font-size: 12px; font-weight: 600; color: var(--muted)">Save in this browser as</label>
+            <div style="display: flex; gap: 6px">
+              <input id="save-name" value="{{saveName}}" onChange="{{onSaveName}}" autoFocus="{{true}}" autocomplete="off" style="flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid var(--control); border-radius: 8px; font: inherit; font-size: 13px">
+              <button onClick="{{doSave}}" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: var(--ink); color: var(--on-ink); font-size: 13px; font-weight: 600; cursor: pointer">{{saveLabel}}</button>
+            </div>
+            <sc-if value="{{hasSaveError}}" hint-placeholder-val="{{false}}"><span role="alert" style="font-size: 12px; color: var(--bad)">{{saveError}}</span></sc-if>
+            <span style="font-size: 11.5px; line-height: 1.45; color: var(--muted)">Kept in this browser only, so reopen it from <strong>Open</strong> here. Download the file to keep it anywhere else.</span>
+          </div>
+        </sc-if>
+      </div>
     </sc-if>
   </div>
   <div style="display: flex; align-items: center; gap: 8px; flex: 1 1 340px; min-width: 0; height: 32px; padding: 0 4px 0 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px">
@@ -103,35 +140,6 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
     </sc-if>
   </div>
   <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
-    <button class="tb" onClick="{{showOpen}}" title="Open a plan: drop a file, choose one, or enter a URL" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer">
-      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6h6l2 2h10v11H3z"></path></svg>Open
-    </button>
-    <button class="tb" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0" onClick="{{newPlan}}" aria-label="New plan" title="New plan">
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4M12 11v6M9 14h6"></path></svg>
-    </button>
-    <button class="tb" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0" onClick="{{copyMd}}" aria-label="Copy the markdown" title="{{copyTitle}}">
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
-    </button>
-    <button class="tb" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0" onClick="{{download}}" aria-label="Download {{fileName}}" title="Download {{fileName}}">
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
-    </button>
-    <div onKeyDown="{{onSaveKey}}" style="position: relative">
-      <button class="tb" onClick="{{toggleSave}}" aria-haspopup="true" aria-expanded="{{saveOpen}}" aria-label="Save in this browser" title="Save in this browser" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--control); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; padding: 0">
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg>
-      </button>
-      <sc-if value="{{saveOpen}}" hint-placeholder-val="{{false}}">
-        <div onClick="{{closeSave}}" style="position: fixed; inset: 0; z-index: 39"></div>
-        <div role="dialog" aria-label="Save in this browser" style="position: absolute; z-index: 40; top: calc(100% + 6px); right: 0; width: 300px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)">
-          <label for="save-name" style="font-size: 12px; font-weight: 600; color: var(--muted)">Save in this browser as</label>
-          <div style="display: flex; gap: 6px">
-            <input id="save-name" value="{{saveName}}" onChange="{{onSaveName}}" autoFocus="{{true}}" autocomplete="off" style="flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid var(--control); border-radius: 8px; font: inherit; font-size: 13px">
-            <button onClick="{{doSave}}" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: var(--ink); color: var(--on-ink); font-size: 13px; font-weight: 600; cursor: pointer">{{saveLabel}}</button>
-          </div>
-          <sc-if value="{{hasSaveError}}" hint-placeholder-val="{{false}}"><span role="alert" style="font-size: 12px; color: var(--bad)">{{saveError}}</span></sc-if>
-          <span style="font-size: 11.5px; line-height: 1.45; color: var(--muted)">Kept in this browser only, so reopen it from <strong>Open</strong> here. Download the file to keep it anywhere else.</span>
-        </div>
-      </sc-if>
-    </div>
     <div role="group" aria-label="Theme" style="display: flex; align-items: center; gap: 4px">
       <sc-for list="{{themes}}" as="th" hint-placeholder-count="4">
         <button class="tb" onClick="{{th.pick}}" aria-pressed="{{th.pressed}}" aria-label="{{th.label}} theme" title="{{th.label}}" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 6px; border: 1px solid {{th.bd}}; border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer">
@@ -1035,6 +1043,15 @@ const syncQuery = (st) => {
   const url = location.pathname + (qs ? '?' + qs : '') + location.hash;
   if (url !== location.pathname + location.search + location.hash) history.replaceState(null, '', url);
 };
+/** A share link with the plan deflated and base64url'd into #md= (the hash never reaches a server). The loader decodes it. */
+const LINK_WARN = 2048; /* the classic URL ceiling: some apps, emails and servers cut links longer than this */
+const planLink = async (md) => {
+  const bytes = new Uint8Array(await new Response(new Blob([md]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+  let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  const q = new URLSearchParams(location.search); q.delete('src');
+  const qs = q.toString();
+  return location.origin + location.pathname + (qs ? '?' + qs : '') + '#md=' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
 const REL_TEXT = 'var(--on-rel)';
 const FIX_TEXT = 'var(--on-fixed)';
 
@@ -1042,12 +1059,12 @@ class Component extends DCLogic {
   state = {
     doc: START.doc, past: [], future: [], prevMd: START.md, lastKey: null, baseMd: START.md,
     /* srcLabel: what the header shows (a URL, or a file name); srcParam: the ?src= to keep in the address bar. */
-    srcLabel: BOOT.src ?? 'untitled.md', srcParam: BOOT.src,
+    srcLabel: BOOT.src ?? (BOOT.shared ? 'shared link' : 'untitled.md'), srcParam: BOOT.src,
     theme: pick(QUERY.get('theme') ?? G.prefsOf(START.doc).theme ?? storedTheme(), THEMES.map((t) => t.id), 'paper'),
     query: QUERY.get('q') ?? '',
     linkName: '', linkUrl: '', linkError: '',
     titleEditing: false, titleDraft: '', tagDraft: '', tagsOpen: false,
-    saveOpen: false, saveName: '', saveError: '', savedName: null,
+    fileOpen: false, linkNote: null, saveOpen: false, saveName: '', saveError: '', savedName: null,
     tagFilter: (QUERY.get('tags') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
     openOpen: START.error !== null, openUrl: '', openError: START.error ?? '', openBusy: false, dropActive: false,
     selectedId: QUERY.get('task'), drag: null, reorder: null, newGroupIdx: null,
@@ -1123,6 +1140,17 @@ class Component extends DCLogic {
     const dirty = G.serialize(this.state.doc) !== this.state.baseMd;
     if (dirty && typeof confirm === 'function' && !confirm('Start a new plan? Your unsaved edits will be lost (download or copy them first).')) return;
     this.openText(newPlanMd(TODAY), 'untitled.md', false);
+    this.setState({ fileOpen: false });
+  }
+  /* Copies a link carrying the whole plan; it is copied even when long, with a warning. */
+  copyLink(md) {
+    if (!navigator.clipboard || typeof CompressionStream !== 'function') { this.setState({ linkNote: { text: 'This browser can’t copy a link here — use Download instead.', bad: true } }); return; }
+    planLink(md).then((url) => navigator.clipboard.writeText(url).then(() => url)).then(
+      (url) => this.setState({ linkNote: url.length > LINK_WARN
+        ? { text: `Link copied, but it is ${url.length.toLocaleString()} characters — some apps and emails cut links over ${LINK_WARN.toLocaleString()}. Download the file to be safe.`, bad: true }
+        : { text: `Link copied (${url.length.toLocaleString()} characters). It contains the plan as it is now.`, bad: false } }),
+      (e) => this.setState({ linkNote: { text: `Couldn’t copy the link: ${e.message}`, bad: true } }),
+    );
   }
   download(fileName, md) {
     const a = document.createElement('a');
@@ -1130,7 +1158,7 @@ class Component extends DCLogic {
     a.download = fileName;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 0);
-    this.setState({ copied: `Downloaded ${fileName}` });
+    this.setState({ copied: `Downloaded ${fileName}`, fileOpen: false });
   }
   /* Adds a [name](url) link to a task; only http(s) addresses, and the name defaults to the site. */
   addLink(id) {
@@ -1150,7 +1178,7 @@ class Component extends DCLogic {
       this.setState({ saveError: `This browser won’t store it (${e.message}). Download the file instead.` });
       return;
     }
-    this.setState({ baseMd: md, savedName: name, saveOpen: false, saveError: '', copied: `Saved “${name}” in this browser` });
+    this.setState({ baseMd: md, savedName: name, saveOpen: false, fileOpen: false, saveError: '', copied: `Saved “${name}” in this browser` });
   }
   openLocal(name) {
     const save = readSaves()[name];
@@ -1684,9 +1712,8 @@ class Component extends DCLogic {
       clearQuery: () => this.setState({ query: '' }),
       newPlan: () => this.newPlan(),
       download: () => this.download(fileName, md),
-      copyTitle: s.copied === 'Markdown copied to clipboard' ? 'Copied' : 'Copy the markdown',
       themes: THEMES.map((t) => ({ label: t.label, bg: t.bg, ink: t.ink, accent: t.accent, pressed: String(t.id === s.theme), on: t.id === s.theme, bd: t.id === s.theme ? 'var(--ink)' : 'var(--control)', pick: () => this.setTheme(t.id) })),
-      showOpen: () => this.setState({ openOpen: true, openError: '', dropActive: false }),
+      showOpen: () => this.setState({ openOpen: true, openError: '', dropActive: false, fileOpen: false, saveOpen: false }),
       openOpen: s.openOpen, openError: s.openError, hasOpenError: s.openError !== '', openUrl: s.openUrl, dropClass: s.dropActive ? 'drop on' : 'drop',
       openUrlDisabled: s.openUrl.trim() === '' || s.openBusy, openUrlLabel: s.openBusy ? 'Opening…' : 'Open',
       closeOpen: () => this.setState({ openOpen: false, openError: '', dropActive: false }),
@@ -1706,10 +1733,14 @@ class Component extends DCLogic {
       saveOpen: s.saveOpen, saveName: s.saveName, saveError: s.saveError, hasSaveError: s.saveError !== '',
       saveExists: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()),
       saveLabel: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()) ? 'Replace' : 'Save',
+      fileOpen: s.fileOpen,
+      toggleFile: () => this.setState({ fileOpen: !s.fileOpen, saveOpen: false, saveError: '', linkNote: null }),
+      closeFile: () => this.setState({ fileOpen: false, saveOpen: false, saveError: '' }),
+      onFileKey: (e) => { if (e.key === 'Escape') { e.stopPropagation(); this.setState({ fileOpen: false, saveOpen: false }); } else if (e.key === 'Enter' && e.target.id === 'save-name') { e.preventDefault(); this.saveLocal(); } },
+      copyLink: () => this.copyLink(md),
+      hasLinkNote: s.linkNote !== null, linkNote: s.linkNote?.text ?? '', linkNoteColor: s.linkNote?.bad ? 'var(--bad)' : 'var(--muted)',
       toggleSave: () => this.setState({ saveOpen: !s.saveOpen, saveError: '', saveName: s.saveName || s.savedName || title }),
-      closeSave: () => this.setState({ saveOpen: false, saveError: '' }),
       onSaveName: (e) => this.setState({ saveName: e.target.value, saveError: '' }),
-      onSaveKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.saveLocal(); } else if (e.key === 'Escape') { e.stopPropagation(); this.setState({ saveOpen: false }); } },
       doSave: () => this.saveLocal(),
       localSaves: Object.entries(readSaves()).sort((a, b) => String(b[1].savedAt).localeCompare(String(a[1].savedAt))).map(([name, v]) => {
         let n = null;
@@ -1777,7 +1808,19 @@ class Component extends DCLogic {
 (async () => {
   const src = new URLSearchParams(location.search).get('src');
   const boot = { md: null, src: null, error: null };
-  if (src !== null && src.trim() !== '') {
+  const packed = /^#md=([\w-]+)$/.exec(location.hash);
+  if (packed) {
+    try {
+      const bin = atob(packed[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+      boot.md = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+      boot.shared = true;
+    } catch (e) {
+      boot.error = 'Could not read the plan in this link (' + e.message + '). It may have been cut off when it was shared.';
+    }
+    /* The plan now lives in the page, so the address bar no longer pretends to hold it. */
+    history.replaceState(null, '', location.pathname + location.search);
+  } else if (src !== null && src.trim() !== '') {
     try {
       const res = await fetch(new URL(src, location.href));
       if (!res.ok) throw new Error('HTTP ' + res.status);

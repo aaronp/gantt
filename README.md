@@ -50,10 +50,12 @@ the current view.
 Sources on another host must allow CORS. GitHub Pages and
 `raw.githubusercontent.com` do.
 
-**Open** in the header loads another plan: drop a `.md` file, choose one, or
-enter a URL. A URL stays in the address bar as `?src=`.
-Beside it, **New** starts a fresh plan (asking first if you have unsaved
-edits), **Copy** puts the markdown on the clipboard, and **Download** saves it.
+The **File** menu in the header has **New**, which starts a fresh plan (asking
+first if you have unsaved edits), **Open**, which loads another plan (drop a `.md`
+file, choose one, or enter a URL; a URL stays in the address bar as `?src=`),
+**Download**, which saves the markdown file, and
+**Copy link**, which copies a link with the whole plan compressed into its `#md=`
+hash (it warns when the link is over 2,048 characters, which some apps cut off).
 **Save** keeps the plan in this browser under a name you choose; reopen it from
 **Open** → *Saved in this browser*, where saves can also be deleted. The badge in
 the header tells you whether the chart has changes that aren't saved anywhere
