@@ -1,4 +1,4 @@
-# Publishes this repo as-is to GitHub Pages (no Jekyll, so the example markdown
+# Tests, regenerates the Acme example's badge and card, then publishes this repo to GitHub Pages (no Jekyll, so the example markdown
 # files are served raw for the chart to fetch).
 # One-time setup: Settings → Pages → Source: "GitHub Actions".
 # The github-pages environment must allow your branch (see README).
@@ -22,6 +22,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - run: npm test
+      - run: |   # → examples/acme-roadmap/badge.svg and card.json
+          node bin/agile.mjs badge examples/acme-roadmap/ROADMAP.md
+          node bin/agile.mjs card examples/acme-roadmap/ROADMAP.md
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

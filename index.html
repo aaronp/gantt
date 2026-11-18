@@ -68,6 +68,11 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
         <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{showOpen}}">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M3 6h6l2 2h10v11H3z"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Open…</span>
         </button>
+        <sc-if value="{{canSaveFile}}" hint-placeholder-val="{{false}}">
+          <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{saveFile}}">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Save to {{saveFileName}}</span>
+          </button>
+        </sc-if>
         <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{toggleSave}}" aria-expanded="{{saveOpen}}">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Save in this browser…</span>
         </button>
@@ -76,6 +81,9 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
         </button>
         <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{copyLink}}">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Copy link</span>
+        </button>
+        <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{designCard}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 15v-3M11 15V9M15 15v-5"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Design card…</span>
         </button>
         <sc-if value="{{hasLinkNote}}" hint-placeholder-val="{{false}}"><span role="status" style="padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: {{linkNoteColor}}">{{linkNote}}</span></sc-if>
         <sc-if value="{{saveOpen}}" hint-placeholder-val="{{false}}">
@@ -1064,7 +1072,7 @@ class Component extends DCLogic {
     query: QUERY.get('q') ?? '',
     linkName: '', linkUrl: '', linkError: '',
     titleEditing: false, titleDraft: '', tagDraft: '', tagsOpen: false,
-    fileOpen: false, linkNote: null, saveOpen: false, saveName: '', saveError: '', savedName: null,
+    fileOpen: false, linkNote: null, saveUrl: BOOT.writable ? new URL(BOOT.src, location.href).href : null, saveOpen: false, saveName: '', saveError: '', savedName: null,
     tagFilter: (QUERY.get('tags') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
     openOpen: START.error !== null, openUrl: '', openError: START.error ?? '', openBusy: false, dropActive: false,
     selectedId: QUERY.get('task'), drag: null, reorder: null, newGroupIdx: null,
@@ -1106,7 +1114,7 @@ class Component extends DCLogic {
   }
 
   /* Open: replace the plan with a parsed file. A file that does not parse leaves the plan alone and shows why. */
-  openText(text, label, fromUrl) {
+  openText(text, label, fromUrl, writable = false) {
     let doc;
     try { doc = G.parse(text.replace(/\r\n?/g, '\n')); } catch (e) {
       this.setState({ openOpen: true, openBusy: false, dropActive: false, openError: `Can’t open ${label} — ${e.message}` });
@@ -1114,7 +1122,7 @@ class Component extends DCLogic {
     }
     const md = G.serialize(doc);
     this.setState({
-      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, savedName: null,
+      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, saveUrl: fromUrl && writable ? new URL(label, location.href).href : null, savedName: null,
       selectedId: null, drag: null, reorder: null, confirm: null, editing: false, draft: '', copied: `Opened ${label}`, nameError: null,
       openOpen: false, openBusy: false, openError: '', openUrl: '', dropActive: false, ...this.prefState(null, doc),
     });
@@ -1130,8 +1138,8 @@ class Component extends DCLogic {
     let url;
     try { url = new URL(raw, location.href); } catch (e) { this.setState({ openError: `“${raw}” is not a URL` }); return; }
     this.setState({ openBusy: true, openError: '' });
-    fetch(url).then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.text(); }).then(
-      (t) => this.openText(t, raw, true),
+    fetch(url).then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.text().then((t) => [t, res.headers.get('x-agile-writable') === '1']); }).then(
+      ([t, writable]) => this.openText(t, raw, true, writable),
       (e) => this.setState({ openBusy: false, openError: `Could not open ${raw}: ${e.message}. A URL on another site must allow cross-origin requests (GitHub Pages and raw.githubusercontent.com do).` }),
     );
   }
@@ -1168,6 +1176,26 @@ class Component extends DCLogic {
     if (!/^https?:$/.test(url.protocol)) { this.setState({ linkError: 'Links must be http or https.' }); return; }
     const label = (this.state.linkName.trim() || url.hostname).replace(/[\[\]`]/g, '');
     this.commit(G.ops.addLink(this.state.doc, id, label, url.href.replace(/[()\s]/g, encodeURIComponent)), null, { linkName: '', linkUrl: '', linkError: '' });
+  }
+  /* Save to the file itself, when the local `agile` server said it may be written (x-agile-writable). */
+  saveFile(md) {
+    const s = this.state;
+    if (s.saveUrl === null) return;
+    fetch(s.saveUrl, { method: 'PUT', body: md, headers: { 'content-type': 'text/markdown;charset=utf-8' } }).then((res) => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      this.setState({ baseMd: md, savedName: null, fileOpen: false, copied: `Saved ${s.srcLabel}` });
+    }).catch((e) => this.setState({ linkNote: { text: `Couldn’t save ${s.srcLabel}: ${e.message}. Download it instead.`, bad: true } }));
+  }
+  /* The card designer, in a new tab so unsaved edits here survive: the plan goes along as ?src= or, when edited, as #md=. */
+  designCard(md) {
+    const s = this.state;
+    const u = new URL('card.html', location.href);
+    if (s.srcParam !== null) u.searchParams.set('src', s.srcParam);
+    const w = window.open('', '_blank');
+    const go = (hash) => { u.hash = hash; if (w) w.location.href = u.href; else location.href = u.href; };
+    if (s.srcParam !== null && md === s.baseMd) go('');
+    else planLink(md).then((link) => go(new URL(link).hash), () => go(''));
+    this.setState({ fileOpen: false });
   }
   /* Save in this browser under a name; the badge then compares against that save. */
   saveLocal() {
@@ -1728,7 +1756,7 @@ class Component extends DCLogic {
       /* Compared with the last save in this browser, or with the file as loaded. */
       statusLabel: dirty ? 'Unsaved changes' : s.savedName !== null ? `Saved as “${s.savedName}”` : 'No unsaved changes',
       statusTip: dirty
-        ? 'Changes are only in this tab. Save keeps them in this browser; Download or Copy keeps the file.'
+        ? (s.saveUrl !== null ? 'Changes are only in this tab. File → Save writes them to the file.' : 'Changes are only in this tab. Save keeps them in this browser; Download or Copy keeps the file.')
         : s.savedName !== null ? `Matches the save “${s.savedName}” in this browser.` : 'Matches the plan as it was opened.',
       saveOpen: s.saveOpen, saveName: s.saveName, saveError: s.saveError, hasSaveError: s.saveError !== '',
       saveExists: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()),
@@ -1738,6 +1766,8 @@ class Component extends DCLogic {
       closeFile: () => this.setState({ fileOpen: false, saveOpen: false, saveError: '' }),
       onFileKey: (e) => { if (e.key === 'Escape') { e.stopPropagation(); this.setState({ fileOpen: false, saveOpen: false }); } else if (e.key === 'Enter' && e.target.id === 'save-name') { e.preventDefault(); this.saveLocal(); } },
       copyLink: () => this.copyLink(md),
+      canSaveFile: s.saveUrl !== null, saveFileName: s.srcLabel.split('/').pop(), saveFile: () => this.saveFile(md),
+      designCard: () => this.designCard(md),
       hasLinkNote: s.linkNote !== null, linkNote: s.linkNote?.text ?? '', linkNoteColor: s.linkNote?.bad ? 'var(--bad)' : 'var(--muted)',
       toggleSave: () => this.setState({ saveOpen: !s.saveOpen, saveError: '', saveName: s.saveName || s.savedName || title }),
       onSaveName: (e) => this.setState({ saveName: e.target.value, saveError: '' }),
@@ -1826,6 +1856,8 @@ class Component extends DCLogic {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       boot.md = await res.text();
       boot.src = src;
+      /* Set by the `agile` CLI, which accepts a PUT of the file back to the same URL (File → Save). */
+      boot.writable = res.headers.get('x-agile-writable') === '1';
     } catch (e) {
       boot.error = 'Could not load ' + src + ': ' + e.message + '. A URL on another site must allow cross-origin requests (GitHub Pages and raw.githubusercontent.com do).';
       boot.src = src;

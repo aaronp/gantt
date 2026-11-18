@@ -1,6 +1,22 @@
 PORT ?= 8000
 
-.PHONY: dev
+.PHONY: dev test dist publish bump-patch bump-minor bump-major
+
+test:
+	npm test
+
+# Serves the chart with the repo's markdown beside it (see bin/agile.mjs); File → Save writes .md files back.
 dev:
-	@echo "Example: http://localhost:$(PORT)/?src=examples/acme-roadmap/ROADMAP.md"
-	@bun -e 'const s = Bun.serve({ port: $(PORT), async fetch(req) { const p = new URL(req.url).pathname; const f = Bun.file("." + (p.endsWith("/") ? p + "index.html" : p)); return (await f.exists()) ? new Response(f) : new Response("Not found", { status: 404 }); } }); console.log("Serving on " + s.url.href + " (Ctrl-C to stop)")'
+	@PORT=$(PORT) NO_OPEN=1 node bin/agile.mjs examples/acme-roadmap/ROADMAP.md
+
+# Packs the `agile` CLI into pritzlaff-agile-<version>.tgz (install with: npm i -D ./pritzlaff-agile-*.tgz)
+dist: test
+	npm pack
+
+# Bumps package.json, commits and tags v<version> (needs a clean tree)
+bump-patch bump-minor bump-major:
+	npm version $(@:bump-%=%)
+
+# Publishes @pritzlaff/agile to npm. Bump first: make bump-patch|bump-minor|bump-major
+publish: test
+	npm publish
