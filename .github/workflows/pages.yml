@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm test
       - run: |   # → examples/acme-roadmap/badge.svg and card.json
-          node bin/agile.mjs badge examples/acme-roadmap/ROADMAP.md
-          node bin/agile.mjs card examples/acme-roadmap/ROADMAP.md
+          node bin/gantt.mjs badge examples/acme-roadmap/ROADMAP.md
+          node bin/gantt.mjs card examples/acme-roadmap/ROADMAP.md
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

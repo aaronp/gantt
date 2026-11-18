@@ -9,11 +9,11 @@ bun run plan     # opens plan/ROADMAP.md in the chart, served from localhost
 bun start        # the app itself
 ```
 
-`bun run plan` uses the [`@pritzlaff/agile`](https://www.npmjs.com/package/@pritzlaff/agile)
+`bun run plan` uses the [`@pritzlaff/gantt`](https://www.npmjs.com/package/@pritzlaff/gantt)
 dev dependency. Edits in the chart are written back with **File → Save to ROADMAP.md**, so
 commit the file as usual. Edit it by hand and reload the page to see changes.
 
-No install? `bunx @pritzlaff/agile plan/ROADMAP.md` does the same.
+No install? `bunx @pritzlaff/gantt plan/ROADMAP.md` does the same.
 
 ## Badge and summary card
 
@@ -31,8 +31,8 @@ pick **File → Design card…**, then **Save ROADMAP.card.json** (it lands in `
 `make snapshot` again.
 
 The card's link opens the hosted chart on your published `ROADMAP.md`. `make` works out that URL
-from your `origin` remote; override it with `make snapshot AGILE_SRC=<url>`, and point it at
-another viewer with `AGILE_HOST=<url>` (the same address as `VIEWER` in `plan/index.html`).
+from your `origin` remote; override it with `make snapshot GANTT_SRC=<url>`, and point it at
+another viewer with `GANTT_HOST=<url>` (the same address as `VIEWER` in `plan/index.html`).
 
 ## Publishing on GitHub Pages
 

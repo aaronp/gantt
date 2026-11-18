@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun install && make snapshot AGILE_SRC=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ROADMAP.md
+      - run: bun install && make snapshot GANTT_SRC=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ROADMAP.md
       - uses: actions/upload-pages-artifact@v3
         with:
           path: plan

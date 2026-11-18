@@ -113,7 +113,7 @@ try {
       initial = r.prefs;
       if (r.warnings.length) note(`Ignored in ${fileName}: ${r.warnings.join('; ')}`, true);
     }
-    /* Saving needs the plan's own server to accept it (the `agile` CLI); an edited plan from #md= is not checked. */
+    /* Saving needs the plan's own server to accept it (the `gantt` CLI); an edited plan from #md= is not checked. */
     if (packed) writable = (await fetch(url, { method: 'HEAD' }).catch(() => null))?.headers.get('x-agile-writable') === '1';
   }
 } catch (e) { note(e.message, true); }
@@ -190,7 +190,7 @@ $('download').onclick = () => {
   a.download = fileName;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 0);
-  note(`Downloaded ${fileName}: put it beside the plan, then run agile card / agile badge.`);
+  note(`Downloaded ${fileName}: put it beside the plan, then run gantt card / gantt badge.`);
 };
 $('copy').onclick = () => navigator.clipboard.writeText(text).then(() => note('Copied.'), (e) => note(`Couldn’t copy: ${e.message}`, true));
 $('save').onclick = () => fetch(sidecarUrl, { method: 'PUT', body: text, headers: { 'content-type': 'application/json' } })

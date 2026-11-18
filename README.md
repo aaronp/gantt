@@ -68,25 +68,25 @@ make dev    # serves on http://localhost:8000/ and prints the example's URL
 ```
 
 Some browsers block the scripts over `file://`, so serve the folder.
-When the chart is served by `make dev` or the `agile` CLI, **File → Save to ROADMAP.md**
+When the chart is served by `make dev` or the `gantt` CLI, **File → Save to ROADMAP.md**
 writes your edits straight back to the file.
 
-## The `agile` CLI
+## The `gantt` CLI
 
 ```sh
-bunx @pritzlaff/agile ROADMAP.md   # or npx; no install needed
+bunx @pritzlaff/gantt ROADMAP.md   # or npx; no install needed
 ```
 
 It serves the chart and that file on localhost and opens the browser. Other `.md`
 files under the current directory can be opened with `?src=` too. **File → Save** writes
 the plan back to disk. `PORT=8000` fixes the port; `NO_OPEN=1` skips opening a browser.
-The package has no dependencies: it is `bin/agile.mjs` plus the page itself.
+The package has no dependencies: it is `bin/gantt.mjs` plus the page itself.
 
 ### Card and badge
 
 ```sh
-agile card ROADMAP.md [out-dir]    # → card.json: the plan as a dashboard card (data only)
-agile badge ROADMAP.md [out-dir]   # → badge.svg: drawn from the same card
+gantt card ROADMAP.md [out-dir]    # → card.json: the plan as a dashboard card (data only)
+gantt badge ROADMAP.md [out-dir]   # → badge.svg: drawn from the same card
 ```
 
 `card.json` (version 1) has a title (the plan's), a subtitle (its date span), a status pill
@@ -98,8 +98,8 @@ inside it, and **upcoming** otherwise.
 What the card says (titles, legend labels, colours, order) comes from an optional
 `ROADMAP.card.json` beside the markdown. Design one with **File → Design card…**
 (`card.html?src=…`), which previews the card and badge and downloads the file, or saves it
-beside the plan when served by the CLI. The link opens the chart at `AGILE_HOST` (default
-`https://aaronp.github.io/gantt/`) on `AGILE_SRC` (where your published markdown lives); set both
+beside the plan when served by the CLI. The link opens the chart at `GANTT_HOST` (default
+`https://aaronp.github.io/gantt/`) on `GANTT_SRC` (where your published markdown lives); set both
 as environment variables. The Pages workflow here regenerates the Acme example's files on every
 push, so a README can embed the live badge:
 
@@ -110,8 +110,8 @@ push, so a README can embed the live badge:
 ### Adding it to your Bun project
 
 ```sh
-bun add -d @pritzlaff/agile
-bun pm pkg set scripts.plan="agile plan/ROADMAP.md"
+bun add -d @pritzlaff/gantt
+bun pm pkg set scripts.plan="gantt plan/ROADMAP.md"
 mkdir -p plan && echo '- Launch `id:launch` `start:2026-12-14` `dur:3d`' > plan/ROADMAP.md
 bun run plan
 ```
@@ -175,5 +175,5 @@ GitHub set Settings → Pages → Source: **GitHub Actions**. Your site at
 - `examples/acme-roadmap/`: a cloneable data-only repo that points back here.
 - `examples/bun-app/`: a Bun project with its own `plan/ROADMAP.md`: `bun run plan` opens it locally, Pages publishes it.
 - `card.js`: `card.json` and the badge, shared by the CLI and `card.html` (the card designer). It reads plans with the page's own parser, cut out of `index.html`.
-- `bin/agile.mjs`: the CLI (local server with save, `card`, `badge`).
+- `bin/gantt.mjs`: the CLI (local server with save, `card`, `badge`).
 - `spec.md`: the markdown format.

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// agile <plan.md>: serves the chart and that plan on localhost, then opens it in the browser.
+// gantt <plan.md>: serves the chart and that plan on localhost, then opens it in the browser.
 //   Markdown (.md) and card settings (.card.json) under the current directory are served too, so ?src= can
 //   switch plans; File → Save writes the plan back (PUT), and the card designer saves <plan>.card.json beside it.
-// agile card <plan.md> [out-dir]: writes card.json, the plan as a dashboard card (out-dir defaults to the plan's folder).
-// agile badge <plan.md> [out-dir]: writes badge.svg, drawn from the same card.
-//   Both read the optional sidecar <plan>.card.json. The card links to AGILE_HOST (default https://aaronp.github.io/gantt/)
-//   with ?src=AGILE_SRC, where the published markdown lives (default: the path given, relative to AGILE_HOST).
+// gantt card <plan.md> [out-dir]: writes card.json, the plan as a dashboard card (out-dir defaults to the plan's folder).
+// gantt badge <plan.md> [out-dir]: writes badge.svg, drawn from the same card.
+//   Both read the optional sidecar <plan>.card.json. The card links to GANTT_HOST (default https://aaronp.github.io/gantt/)
+//   with ?src=GANTT_SRC, where the published markdown lives (default: the path given, relative to GANTT_HOST).
 import { createServer } from 'node:http';
 import { readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -14,12 +14,12 @@ import { fileURLToPath } from 'node:url';
 import { badgeSvg, card, coreFrom, parsePrefs, sidecarOf } from '../card.js';
 
 const pkg = fileURLToPath(new URL('..', import.meta.url));
-const die = (msg) => { console.error(`agile: ${msg}`); process.exit(1); };
+const die = (msg) => { console.error(`gantt: ${msg}`); process.exit(1); };
 const [cmd, ...args] = process.argv.slice(2);
 
 if (cmd === 'card' || cmd === 'badge') {
   const [md, out = dirname(md ?? '')] = args;
-  if (!md) die(`usage: agile ${cmd} <plan.md> [out-dir]`);
+  if (!md) die(`usage: gantt ${cmd} <plan.md> [out-dir]`);
   let prefs = {};
   try {
     const r = parsePrefs(JSON.parse(await readFile(sidecarOf(md), 'utf8')));
@@ -30,7 +30,7 @@ if (cmd === 'card' || cmd === 'badge') {
   }
   try {
     const G = coreFrom(await readFile(join(pkg, 'index.html'), 'utf8'));
-    const c = card(G, await readFile(md, 'utf8'), prefs, new Date().toLocaleDateString('en-CA'), { label: md, src: process.env.AGILE_SRC || md }, process.env.AGILE_HOST || undefined);
+    const c = card(G, await readFile(md, 'utf8'), prefs, new Date().toLocaleDateString('en-CA'), { label: md, src: process.env.GANTT_SRC || md }, process.env.GANTT_HOST || undefined);
     const [name, body] = cmd === 'card' ? ['card.json', JSON.stringify(c, null, 2) + '\n'] : ['badge.svg', badgeSvg(c)];
     await writeFile(join(out, name), body);
     console.log(`Wrote ${join(out, name)}`);
@@ -41,9 +41,9 @@ if (cmd === 'card' || cmd === 'badge') {
 }
 
 if (!cmd || cmd === '-h' || cmd === '--help') {
-  console.error('Usage: agile <plan.md>                    (PORT=8000 picks the port, NO_OPEN=1 skips opening a browser)');
-  console.error('       agile card <plan.md> [out-dir]     (writes card.json)');
-  console.error('       agile badge <plan.md> [out-dir]    (writes badge.svg)');
+  console.error('Usage: gantt <plan.md>                    (PORT=8000 picks the port, NO_OPEN=1 skips opening a browser)');
+  console.error('       gantt card <plan.md> [out-dir]     (writes card.json)');
+  console.error('       gantt badge <plan.md> [out-dir]    (writes badge.svg)');
   process.exit(cmd ? 0 : 1);
 }
 

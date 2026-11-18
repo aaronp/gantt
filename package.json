@@ -1,5 +1,5 @@
 {
-  "name": "@pritzlaff/agile",
+  "name": "@pritzlaff/gantt",
   "version": "1.0.1",
   "description": "A Gantt chart driven by one markdown file: a local viewer that saves back to the file, plus card.json and badge.svg summaries.",
   "repository": {
@@ -9,7 +9,7 @@
   "homepage": "https://aaronp.github.io/gantt/",
   "type": "module",
   "bin": {
-    "agile": "bin/agile.mjs"
+    "gantt": "bin/gantt.mjs"
   },
   "files": [
     "bin",

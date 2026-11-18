@@ -1,13 +1,13 @@
 /**
  * A dashboard card for a plan, as data (card.json), and a status badge drawn from it (badge.svg).
- * Shared by the `agile` CLI (Node) and the card designer (card.html). No DOM, no clock: "today" is passed in.
+ * Shared by the `gantt` CLI (Node) and the card designer (card.html). No DOM, no clock: "today" is passed in.
  *
  * card.json (version 1) is tool-neutral: title, subtitle, a status pill, one big number, a legend with a
  * count per item, and a source link. What it says comes from an optional sidecar, <plan>.card.json.
  */
 
-/** Where the card's link opens the plan. The CLI takes AGILE_HOST from the environment to point elsewhere. */
-export const AGILE_HOST = 'https://aaronp.github.io/gantt/';
+/** Where the card's link opens the plan. The CLI takes GANTT_HOST from the environment to point elsewhere. */
+export const GANTT_HOST = 'https://aaronp.github.io/gantt/';
 export const STATUSES = ['done', 'active', 'upcoming', 'late'];
 export const DEFAULT_COLORS = { done: '#1E7A46', active: '#2F5BD3', upcoming: '#6B7280', late: '#B42318' };
 const DEFAULT_LABELS = { done: 'Done', active: 'In progress', upcoming: 'Upcoming', late: 'Late' };
@@ -69,7 +69,7 @@ export const parsePrefs = (json) => {
  * The card for a plan. `G` comes from coreFrom; `today` is YYYY-MM-DD; `at.label` is the default source label
  * (the markdown path) and `at.src` where the viewer can fetch the markdown (?src=), a URL or a path relative to `host`.
  */
-export const card = (G, md, prefs, today, at, host = AGILE_HOST) => {
+export const card = (G, md, prefs, today, at, host = GANTT_HOST) => {
   const doc = G.parse(md);
   const sched = G.schedule(doc);
   const tasks = G.tasksOf(doc);

@@ -1177,7 +1177,7 @@ class Component extends DCLogic {
     const label = (this.state.linkName.trim() || url.hostname).replace(/[\[\]`]/g, '');
     this.commit(G.ops.addLink(this.state.doc, id, label, url.href.replace(/[()\s]/g, encodeURIComponent)), null, { linkName: '', linkUrl: '', linkError: '' });
   }
-  /* Save to the file itself, when the local `agile` server said it may be written (x-agile-writable). */
+  /* Save to the file itself, when the local `gantt` server said it may be written (x-agile-writable). */
   saveFile(md) {
     const s = this.state;
     if (s.saveUrl === null) return;
@@ -1856,7 +1856,7 @@ class Component extends DCLogic {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       boot.md = await res.text();
       boot.src = src;
-      /* Set by the `agile` CLI, which accepts a PUT of the file back to the same URL (File → Save). */
+      /* Set by the `gantt` CLI, which accepts a PUT of the file back to the same URL (File → Save). */
       boot.writable = res.headers.get('x-agile-writable') === '1';
     } catch (e) {
       boot.error = 'Could not load ' + src + ': ' + e.message + '. A URL on another site must allow cross-origin requests (GitHub Pages and raw.githubusercontent.com do).';
