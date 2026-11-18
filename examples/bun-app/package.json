@@ -1,0 +1,12 @@
+{
+  "name": "bun-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun index.ts",
+    "plan": "agile plan/ROADMAP.md"
+  },
+  "devDependencies": {
+    "@pritzlaff/agile": "^0.1.0"
+  }
+}

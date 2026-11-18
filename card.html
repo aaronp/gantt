@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card designer</title>
+<style>
+:root{--bg:#F6F5F2;--surface:#FFF;--rule:#E3E1DC;--ink:#17181A;--muted:#5E6168;--accent:#2F5BD3;--bad:#B42318;--good:#1E7A46;--warn:#B26B00;--neutral:#5E6168;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--bg:#111316;--surface:#1A1D21;--rule:#2E333A;--ink:#ECEFED;--muted:#A9B0B6;--accent:#8FB0FF;--bad:#FF8A9A;--good:#5FD0B8;--warn:#F0C77A;--neutral:#A9B0B6;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--surface)}
+header h1{margin:0;font-size:16px}
+header .src{color:var(--muted);font-family:ui-monospace,monospace;font-size:12px;overflow-wrap:anywhere}
+header a{margin-left:auto;color:var(--accent)}
+main{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:24px;padding:16px;max-width:1100px;margin:0 auto}
+@media (max-width:760px){main{grid-template-columns:minmax(0,1fr)}}
+fieldset{border:1px solid var(--rule);border-radius:10px;padding:12px;margin:0 0 12px;background:var(--surface)}
+legend{font-weight:600;padding:0 4px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:8px 0 4px}
+input[type=text],select{width:100%;height:32px;padding:0 8px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) 36px auto auto;gap:6px;align-items:center;margin-top:6px}
+.row input[type=color]{width:36px;height:32px;padding:2px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+button{height:32px;padding:0 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+button.icon{padding:0 8px}
+.check{display:flex;gap:6px;align-items:center;font-size:13px;margin-top:10px;color:var(--ink);font-weight:400}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.note{font-size:12px;color:var(--muted)}
+.note.bad{color:var(--bad)}
+h2{font-size:13px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px;max-width:420px;margin-bottom:20px}
+.card .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.card .t{font-weight:700;font-size:16px}
+.card .sub{color:var(--muted);font-size:12px}
+.pill{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.big{font-size:40px;font-weight:700;line-height:1;margin:16px 0 4px}
+.big span{font-size:14px;font-weight:500;color:var(--muted);margin-left:6px}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--rule);margin:12px 0}
+.items{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px}
+.items i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.card .foot{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:12px;color:var(--muted)}
+.card .foot a{color:var(--accent);overflow-wrap:anywhere}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:12px;font-size:12px;overflow:auto;max-height:320px}
+</style>
+</head>
+<body>
+<header><h1>Card designer</h1><span class="src" id="src"></span><a id="back" href="./">← Chart</a></header>
+<main>
+  <form id="form" onsubmit="return false">
+    <fieldset><legend>Text</legend>
+      <label for="title">Title</label><input type="text" id="title">
+      <label for="subtitle">Subtitle</label><input type="text" id="subtitle">
+      <label for="source">Source label</label><input type="text" id="source">
+    </fieldset>
+    <fieldset><legend>Big number</legend>
+      <label for="primary">Counts</label>
+      <select id="primary"><option value="total">All tasks</option></select>
+      <label for="hlabel">Words after it</label><input type="text" id="hlabel">
+    </fieldset>
+    <fieldset><legend>Legend</legend>
+      <div id="legend"></div>
+      <label class="check"><input type="checkbox" id="hideZero"> Leave out items with no tasks</label>
+    </fieldset>
+    <div class="actions">
+      <button class="primary" id="save" hidden>Save</button>
+      <button id="download">Download</button>
+      <button id="copy">Copy</button>
+      <button id="reset">Reset to defaults</button>
+    </div>
+    <p class="note" id="note"></p>
+  </form>
+  <section>
+    <h2>Card preview</h2>
+    <div class="card" id="card"></div>
+    <h2>Badge</h2>
+    <p id="badge"></p>
+    <h2 id="sidecar-name">Settings</h2>
+    <pre id="json"></pre>
+  </section>
+</main>
+<script type="module">
+import { DEFAULT_COLORS, STATUSES, badgeSvg, card, coreFrom, parsePrefs, sidecarOf } from './card.js';
+
+const $ = (id) => document.getElementById(id);
+const note = (text, bad = false) => { $('note').textContent = text; $('note').className = bad ? 'note bad' : 'note'; };
+const NAMES = { done: 'Done', active: 'In progress', upcoming: 'Upcoming', late: 'Late' };
+const today = new Date().toLocaleDateString('en-CA');
+const src = new URLSearchParams(location.search).get('src');
+const fileName = sidecarOf((src ?? 'plan.md').split('/').pop());
+
+/* The plan: carried in #md= (deflated, base64url, as the chart's Copy link makes it), else fetched from ?src=. */
+const G = coreFrom(await (await fetch('./index.html')).text());
+let md = '', sidecarUrl = null, writable = false, initial = {};
+try {
+  const packed = /^#md=([\w-]+)$/.exec(location.hash);
+  if (packed) {
+    const bytes = Uint8Array.from(atob(packed[1].replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+    md = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  }
+  if (src) {
+    const url = new URL(src, location.href);
+    if (!packed) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`could not load ${src}: HTTP ${res.status}`);
+      md = await res.text();
+      writable = res.headers.get('x-agile-writable') === '1';
+    }
+    sidecarUrl = new URL(sidecarOf(url.pathname), url).href;
+    const res = await fetch(sidecarUrl);
+    if (res.ok) {
+      const r = parsePrefs(await res.json());
+      initial = r.prefs;
+      if (r.warnings.length) note(`Ignored in ${fileName}: ${r.warnings.join('; ')}`, true);
+    }
+    /* Saving needs the plan's own server to accept it (the `agile` CLI); an edited plan from #md= is not checked. */
+    if (packed) writable = (await fetch(url, { method: 'HEAD' }).catch(() => null))?.headers.get('x-agile-writable') === '1';
+  }
+} catch (e) { note(e.message, true); }
+$('src').textContent = src ?? 'unsaved plan';
+$('sidecar-name').textContent = fileName;
+if (src) $('back').href = './?src=' + encodeURIComponent(src).replace(/%2F/gi, '/');
+$('save').hidden = !writable;
+$('save').textContent = `Save ${fileName}`;
+STATUSES.forEach((id) => $('primary').append(new Option(NAMES[id], id)));
+
+/* Legend rows: every status, in order, each shown or not. */
+let rows = [];
+const load = (p) => {
+  $('title').value = p.title ?? ''; $('subtitle').value = p.subtitle ?? ''; $('source').value = p.source?.label ?? '';
+  $('primary').value = p.heading?.primary ?? 'total'; $('hlabel').value = p.heading?.label ?? '';
+  $('hideZero').checked = p.hideZero === true;
+  const listed = p.legend ?? STATUSES.map((id) => ({ id }));
+  rows = [...listed.map((l) => ({ ...l, on: true })), ...STATUSES.filter((id) => !listed.some((l) => l.id === id)).map((id) => ({ id, on: false }))];
+  drawRows();
+};
+const drawRows = () => {
+  $('legend').replaceChildren(...rows.map((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.innerHTML = `<input type="checkbox" aria-label="Show ${NAMES[r.id]}"><input type="text" aria-label="${NAMES[r.id]} label"><input type="color" aria-label="${NAMES[r.id]} colour"><button type="button" class="icon" aria-label="Move ${NAMES[r.id]} up">↑</button><button type="button" class="icon" aria-label="Move ${NAMES[r.id]} down">↓</button>`;
+    const [on, label, color, up, down] = div.children;
+    on.checked = r.on; label.value = r.label ?? ''; label.placeholder = NAMES[r.id]; color.value = r.color ?? DEFAULT_COLORS[r.id];
+    on.onchange = () => { r.on = on.checked; update(); };
+    label.oninput = () => { r.label = label.value || undefined; update(); };
+    color.oninput = () => { r.color = color.value.toUpperCase() === DEFAULT_COLORS[r.id] ? undefined : color.value.toUpperCase(); update(); };
+    const move = (d) => { const j = i + d; if (j < 0 || j >= rows.length) return; [rows[i], rows[j]] = [rows[j], rows[i]]; drawRows(); };
+    up.onclick = () => move(-1); down.onclick = () => move(1);
+    return div;
+  }));
+  update();
+};
+
+/* The sidecar: only what differs from the defaults. */
+const prefs = () => {
+  const p = {};
+  const v = (id) => $(id).value.trim();
+  if (v('title')) p.title = v('title');
+  if (v('subtitle')) p.subtitle = v('subtitle');
+  if ($('primary').value !== 'total' || v('hlabel')) p.heading = { ...($('primary').value !== 'total' ? { primary: $('primary').value } : {}), ...(v('hlabel') ? { label: v('hlabel') } : {}) };
+  const legend = rows.filter((r) => r.on).map(({ id, label, color }) => ({ id, ...(label ? { label } : {}), ...(color ? { color } : {}) }));
+  if (legend.length !== STATUSES.length || legend.some((l, i) => l.id !== STATUSES[i] || l.label || l.color)) p.legend = legend;
+  if ($('hideZero').checked) p.hideZero = true;
+  if (v('source')) p.source = { label: v('source') };
+  return p;
+};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let text = '';
+const update = () => {
+  const p = prefs();
+  text = JSON.stringify(p, null, 2) + '\n';
+  $('json').textContent = text;
+  let c;
+  try { c = card(G, md, p, today, { label: src ?? 'plan.md', src: src ?? 'plan.md' }, new URL('./', location.href).href); } catch (e) { $('card').textContent = `Can’t read the plan: ${e.message}`; return; }
+  const total = Object.values(c.report).reduce((a, b) => a + b, 0) || 1;
+  $('card').innerHTML = `<div class="top"><div><div class="t">${esc(c.title)}</div><div class="sub">${esc(c.subtitle)}</div></div><span class="pill" style="color:var(--${c.status.tone})">${esc(c.status.label)}</span></div>`
+    + `<div class="big">${esc(c.heading.primary)}<span>${esc(c.heading.label)}</span></div>`
+    + `<div class="bar">${c.legend.map((l) => `<span style="width:${(100 * c.report[l.id]) / total}%;background:${esc(l.color)}"></span>`).join('')}</div>`
+    + `<div class="items">${c.legend.map((l) => `<span><i style="background:${esc(l.color)}"></i>${esc(l.label)} <b>${c.report[l.id]}</b></span>`).join('')}</div>`
+    + `<div class="foot"><a href="${esc(c.source.url)}">${esc(c.source.label)}</a><span>Updated ${esc(c.updated)}</span></div>`;
+  $('badge').innerHTML = `<img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(badgeSvg(c))}">`;
+};
+
+$('form').addEventListener('input', update);
+$('form').addEventListener('change', update);
+$('reset').onclick = () => { load({}); note('Back to the defaults (not saved yet).'); };
+$('download').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  note(`Downloaded ${fileName}: put it beside the plan, then run agile card / agile badge.`);
+};
+$('copy').onclick = () => navigator.clipboard.writeText(text).then(() => note('Copied.'), (e) => note(`Couldn’t copy: ${e.message}`, true));
+$('save').onclick = () => fetch(sidecarUrl, { method: 'PUT', body: text, headers: { 'content-type': 'application/json' } })
+  .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); note(`Saved ${fileName}.`); })
+  .catch((e) => note(`Couldn’t save ${fileName}: ${e.message}`, true));
+load(initial);
+</script>
+</body>
+</html>
