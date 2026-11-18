@@ -1,6 +1,6 @@
 {
   "name": "@pritzlaff/agile",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "A Gantt chart driven by one markdown file: a local viewer that saves back to the file, plus card.json and badge.svg summaries.",
   "repository": {
     "type": "git",
