@@ -5,11 +5,11 @@ PORT ?= 8000
 test:
 	npm test
 
-# Serves the chart with the repo's markdown beside it (see bin/agile.mjs); File → Save writes .md files back.
+# Serves the chart with the repo's markdown beside it (see bin/gantt.mjs); File → Save writes .md files back.
 dev:
-	@PORT=$(PORT) NO_OPEN=1 node bin/agile.mjs examples/acme-roadmap/ROADMAP.md
+	@PORT=$(PORT) NO_OPEN=1 node bin/gantt.mjs examples/acme-roadmap/ROADMAP.md
 
-# Packs the `agile` CLI into pritzlaff-agile-<version>.tgz (install with: npm i -D ./pritzlaff-agile-*.tgz)
+# Packs the `gantt` CLI into pritzlaff-gantt-<version>.tgz (install with: npm i -D ./pritzlaff-gantt-*.tgz)
 dist: test
 	npm pack
 
@@ -17,6 +17,6 @@ dist: test
 bump-patch bump-minor bump-major:
 	npm version $(@:bump-%=%)
 
-# Publishes @pritzlaff/agile to npm. Bump first: make bump-patch|bump-minor|bump-major
+# Publishes @pritzlaff/gantt to npm. Bump first: make bump-patch|bump-minor|bump-major
 publish: test
 	npm publish
