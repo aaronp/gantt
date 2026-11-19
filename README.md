@@ -65,7 +65,16 @@ The full format, with a minimal and a complete example, is in
 A task needs an `id`, a `dur`, and either a fixed `start` date, `after:` the
 tasks whose **end** it follows, or `with:` the tasks whose **start** it follows.
 `dur:0d` is a milestone. Tasks can also carry `tags:` and named links such as
-`[Figma](https://…)`.
+`[Figma](https://…)`, and a markdown description in a fence just under the task
+(edited in the inspector with Write / Preview and a formatting toolbar):
+
+````markdown
+- [ ] Wireframes `id:wire` `after:brief` `dur:5d`
+  ```md
+  Cover **onboarding** and settings.
+  - [ ] mobile first
+  ```
+````
 
 ## Query parameters
 
@@ -105,7 +114,9 @@ make dev    # serves on http://localhost:8000/ and prints the example's URL
 
 Some browsers block the scripts over `file://`, so serve the folder.
 When the chart is served by `make dev` or the `gantt` CLI, **File → Save to ROADMAP.md**
-writes your edits straight back to the file.
+writes your edits straight back to the file. **Autosave** (on by default, toggled in the File
+menu and remembered per browser) writes them 800ms after each edit; the status pill shows
+Saved / Saving… / Unsaved changes / Not saved.
 
 ## The `gantt` CLI
 
