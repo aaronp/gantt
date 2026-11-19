@@ -9,6 +9,42 @@ Drag a bar to move it, drag its right edge to change its duration, drag ⋮⋮ t
 reorder, and pin a task to a date. Each edit is written straight back into the
 markdown shown alongside the chart.
 
+## Adding it to your project
+
+From your project's root (Bun shown; `npm i -D`, `npm pkg set` and `npm run` work the same):
+
+```sh
+bun add -d @pritzlaff/gantt
+bun pm pkg set scripts.gantt="gantt docs/schedule/schedule.md"
+mkdir -p docs/schedule
+cat > docs/schedule/schedule.md <<'EOF'
+# My app — v1
+
+## Design
+- [x] Requirements `id:reqs` `start:2026-12-01` `dur:3d`
+- [ ] Wireframes `id:wire` `after:reqs` `dur:1w` `tags:ux`
+
+## Build
+- [ ] API `id:api` `after:reqs+1d` `dur:8d` `tags:backend`
+- [ ] Screens `id:screens` `after:wire,api` `dur:5d`
+- [ ] User guide `id:guide` `with:screens+2d` `dur:3d` `tags:docs`
+
+## Launch
+- Release `id:launch` `after:screens` `dur:0d`
+EOF
+bun run gantt    # opens it on localhost
+```
+
+**File → Save** writes chart edits back to `docs/schedule/schedule.md`; commit it like any other
+source. The full format is in **[spec.md](spec.md)**, also published at <https://aaronp.github.io/gantt/spec.md> and shipped in the package as `node_modules/@pritzlaff/gantt/spec.md`, so people and agents working in your repo can read the version they run.
+
+`gantt card docs/schedule/schedule.md` and `gantt badge docs/schedule/schedule.md` write `card.json` and
+`badge.svg` beside it, for a dashboard or a README badge ([Card and badge](#card-and-badge)).
+To publish it on GitHub Pages as well, copy `plan/index.html` and `.github/workflows/pages.yml` from
+[examples/bun-app](examples/bun-app), which is this setup end to end with the file in `plan/`
+(change that path in the workflow to match yours).
+[aaronp/template](https://github.com/aaronp/template) is a project with this and its sibling tools (goals, architecture, decisions, risks, schedule, delivery) set up together behind one dashboard.
+
 This repo is the viewer. Your plan can live in its own repo and be loaded with
 `?src=` (see [Publishing your own plan](#publishing-your-own-plan)).
 
@@ -106,18 +142,6 @@ push, so a README can embed the live badge:
 ```md
 [![Plan](https://you.github.io/your-plan/badge.svg)](https://you.github.io/your-plan/)
 ```
-
-### Adding it to your Bun project
-
-```sh
-bun add -d @pritzlaff/gantt
-bun pm pkg set scripts.plan="gantt plan/ROADMAP.md"
-mkdir -p plan && echo '- Launch `id:launch` `start:2026-12-14` `dur:3d`' > plan/ROADMAP.md
-bun run plan
-```
-
-[examples/bun-app](examples/bun-app) is this setup end to end, including a Pages workflow that
-publishes `plan/` with its badge and card.
 
 ### Releasing
 
