@@ -72,6 +72,11 @@ Store review times vary; keep a week of slack before launch.
   name.
 - **Links:** after the attributes, any number of named links,
   `[Figma](https://…)`. Nothing else may follow the attributes.
+- **Description:** optional markdown in a ```` ```md ```` fence on the line
+  right after the task, indented under it. Everything up to the closing fence
+  (a backtick-only line at least as long as the opener) is the description, so
+  headings and lists in it are never read as sections or tasks. The chart
+  writes the fence one backtick longer than any backtick-only line inside.
 
 | Attribute | Value | Required |
 | --- | --- | --- |
@@ -115,6 +120,7 @@ The file is rejected, with the line number, when a task line can't be used:
 - tasks that depend on each other in a loop (`a` after `b` after `a`);
 - an unknown attribute, a repeated attribute, or text after the attributes
   other than `[name](url)` links;
+- a task description fence that is never closed;
 - an offset together with `start:`.
 
 A list item without an `` `id:` `` is never a task, so ordinary bullet lists in

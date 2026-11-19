@@ -35,6 +35,45 @@ button:disabled{cursor:not-allowed;opacity:.45}
 input[placeholder="Section name"]:hover{border-color:var(--control)}
 input[placeholder="Section name"]:focus{background:var(--surface);border-color:var(--accent);outline:none}
 input,select,textarea{background:var(--surface);color:var(--ink)}
+/* Task description editor and preview (ported from agile) */
+.md{display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere}
+.md-p,.md-h,.md-q{margin:0;white-space:pre-line}
+.md-h{font-weight:600;color:var(--ink)}
+.kb-preview .md-h{color:inherit;font-size:1.05em}
+.md-q{padding-left:10px;border-left:2px solid var(--rule);font-style:italic}
+.md-b{font-weight:600}
+.md-i{font-style:italic}
+.md-s{text-decoration:line-through}
+.md-code{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:.88em;padding:.05em .35em;border-radius:4px;background:var(--seg-bg)}
+.md-a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.md-pre{margin:0;padding:8px 10px;border-radius:8px;background:var(--seg-bg);font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12px;line-height:1.5;overflow:auto;white-space:pre}
+.md-hr{width:100%;border:0;border-top:1px solid var(--rule);margin:2px 0}
+.md-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.md-li{display:flex;align-items:flex-start;gap:7px}
+.md-marker{flex:none;min-width:1em;text-align:right;opacity:.75;font-variant-numeric:tabular-nums}
+.md-li input[type=checkbox]{flex:none;width:14px;height:14px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+.md-li-body{min-width:0;white-space:pre-line}
+.md-done{text-decoration:line-through;opacity:.65}
+.kb-desc-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kb-desc-head>span{font-size:12px;color:var(--muted);font-weight:500}
+.kb-tabs{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.kb-tab{height:28px;padding:0 10px;border:0;background:transparent;cursor:pointer;font-size:12px}
+.kb-tab+.kb-tab{border-left:1px solid var(--rule)}
+.kb-tab[aria-pressed="true"]{background:var(--ink);color:var(--on-ink)}
+.kb-md-editor{display:flex;flex-direction:column;border:1px solid var(--control);border-radius:8px;background:var(--surface);overflow:hidden}
+.kb-md-editor:focus-within{border-color:var(--accent)}
+.kb-fmtbar{display:flex;flex-wrap:wrap;gap:2px;padding:4px;border-bottom:1px solid var(--rule)}
+.kb-fmt{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:inherit;opacity:.75}
+.kb-fmt:hover{opacity:1;background:var(--seg-bg)}
+.kb-fmt-sep{margin-right:8px}
+.kb-md-editor textarea{border:0;border-radius:0;background:transparent;min-height:170px;font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12.5px;line-height:1.6;padding:10px 12px;resize:vertical;width:100%;outline:none}
+.kb-preview{cursor:text;min-height:120px;padding:12px;border:1px solid var(--rule);border-radius:8px;font-size:14px;line-height:1.5}
+.kb-hint{margin:0;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono', ui-monospace, monospace}
+.kb-tab{color:var(--ink)}
+.kb-muted{color:var(--muted)}
+.kb-md-editor textarea{color:var(--ink);box-sizing:border-box}
+.kb-md-editor textarea:focus-visible{outline:none}
+.kb-preview{font-size:13px}
 </style>
 </helmet>
 <div class="g-root" data-theme="{{theme}}" style="height: 100vh; display: flex; flex-direction: column; font-family: 'Instrument Sans', system-ui, sans-serif; color: var(--ink); background: var(--bg); font-size: 13px">
@@ -71,6 +110,9 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
         <sc-if value="{{canSaveFile}}" hint-placeholder-val="{{false}}">
           <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{saveFile}}">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h7V3M8 21v-7h8v7"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Save to {{saveFileName}}</span>
+          </button>
+          <button role="menuitemcheckbox" aria-checked="{{autosaveOn}}" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{toggleAutosave}}">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--muted)"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"></path></svg><span style="flex: 1">Autosave</span><span style="color: var(--muted)">{{autosaveLabel}}</span>
           </button>
         </sc-if>
         <button role="menuitem" class="tb" style="width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer" onClick="{{toggleSave}}" aria-expanded="{{saveOpen}}">
@@ -315,6 +357,34 @@ input,select,textarea{background:var(--surface);color:var(--ink)}
             <input id="insp-name" value="{{insp.name}}" onChange="{{insp.onName}}" style="height: 36px; padding: 0 10px; border: 1px solid var(--control); border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink)">
             <sc-if value="{{insp.hasNameError}}" hint-placeholder-val="{{false}}">
               <span style="font-size: 12px; color: var(--bad)">{{insp.nameError}}</span>
+            </sc-if>
+          </div>
+          <div class="kb-field" style="display: flex; flex-direction: column; gap: 6px">
+            <div class="kb-desc-head">
+              <span>Description</span>
+              <div class="kb-tabs" role="group" aria-label="Description view">
+                <button class="kb-tab" aria-pressed="{{insp.isWrite}}" onClick="{{insp.showWrite}}">Write</button>
+                <button class="kb-tab" aria-pressed="{{insp.isPreview}}" onClick="{{insp.showPreview}}">Preview</button>
+              </div>
+            </div>
+            <sc-if value="{{insp.isWrite}}" hint-placeholder-val="{{true}}">
+              <div class="kb-md-editor">
+                <div class="kb-fmtbar" role="toolbar" aria-label="Formatting">
+                  <sc-for list="{{insp.formatButtons}}" as="fb" hint-placeholder-count="10">
+                    <button class="{{fb.cls}}" tabindex="-1" aria-label="{{fb.label}}" title="{{fb.title}}" onMouseDown="{{fb.keepFocus}}" onClick="{{fb.apply}}">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{fb.d}}"></path></svg>
+                    </button>
+                  </sc-for>
+                </div>
+                <textarea id="insp-desc" aria-label="Description (markdown)" spellcheck="true" value="{{insp.desc}}" onChange="{{insp.onDesc}}" onKeyDown="{{insp.onDescKey}}"></textarea>
+              </div>
+              <p class="kb-hint">**bold** *italic* `code` - list 1. list - [ ] todo &gt; quote</p>
+            </sc-if>
+            <sc-if value="{{insp.isPreview}}" hint-placeholder-val="{{false}}">
+              <div class="kb-preview md" title="Click to edit" onClick="{{insp.editFromPreview}}">
+                <sc-for list="{{insp.preview}}" as="blk" hint-placeholder-count="1"><sc-if value="{{blk.isPara}}" hint-placeholder-val="{{true}}"><p class="md-p"><sc-for list="{{blk.spans}}" as="sp"><sc-if value="{{sp.isLink}}" hint-placeholder-val="{{false}}"><a class="{{sp.cls}}" href="{{sp.href}}" target="_blank" rel="noopener noreferrer">{{sp.text}}</a></sc-if><sc-if value="{{sp.isPlain}}" hint-placeholder-val="{{true}}"><span class="{{sp.cls}}">{{sp.text}}</span></sc-if></sc-for></p></sc-if><sc-if value="{{blk.isHeading}}" hint-placeholder-val="{{false}}"><p class="md-h"><sc-for list="{{blk.spans}}" as="sp"><sc-if value="{{sp.isLink}}" hint-placeholder-val="{{false}}"><a class="{{sp.cls}}" href="{{sp.href}}" target="_blank" rel="noopener noreferrer">{{sp.text}}</a></sc-if><sc-if value="{{sp.isPlain}}" hint-placeholder-val="{{true}}"><span class="{{sp.cls}}">{{sp.text}}</span></sc-if></sc-for></p></sc-if><sc-if value="{{blk.isQuote}}" hint-placeholder-val="{{false}}"><blockquote class="md-q"><sc-for list="{{blk.spans}}" as="sp"><sc-if value="{{sp.isLink}}" hint-placeholder-val="{{false}}"><a class="{{sp.cls}}" href="{{sp.href}}" target="_blank" rel="noopener noreferrer">{{sp.text}}</a></sc-if><sc-if value="{{sp.isPlain}}" hint-placeholder-val="{{true}}"><span class="{{sp.cls}}">{{sp.text}}</span></sc-if></sc-for></blockquote></sc-if><sc-if value="{{blk.isCode}}" hint-placeholder-val="{{false}}"><pre class="md-pre"><code>{{blk.text}}</code></pre></sc-if><sc-if value="{{blk.isRule}}" hint-placeholder-val="{{false}}"><hr class="md-hr"></sc-if><sc-if value="{{blk.isList}}" hint-placeholder-val="{{false}}"><ul class="md-list"><sc-for list="{{blk.items}}" as="li"><li class="md-li" style="{{li.style}}"><sc-if value="{{li.isCheck}}" hint-placeholder-val="{{false}}"><input type="checkbox" aria-label="{{li.checkLabel}}" checked="{{li.checked}}" onChange="{{li.toggle}}"></sc-if><sc-if value="{{li.isMarker}}" hint-placeholder-val="{{true}}"><span class="md-marker" aria-hidden="true">{{li.marker}}</span></sc-if><span class="{{li.bodyCls}}"><sc-for list="{{li.spans}}" as="sp"><sc-if value="{{sp.isLink}}" hint-placeholder-val="{{false}}"><a class="{{sp.cls}}" href="{{sp.href}}" target="_blank" rel="noopener noreferrer">{{sp.text}}</a></sc-if><sc-if value="{{sp.isPlain}}" hint-placeholder-val="{{true}}"><span class="{{sp.cls}}">{{sp.text}}</span></sc-if></sc-for></span></li></sc-for></ul></sc-if></sc-for>
+                <sc-if value="{{insp.previewEmpty}}" hint-placeholder-val="{{false}}"><p class="md-p kb-muted">No description yet. Click to write one.</p></sc-if>
+              </div>
             </sc-if>
           </div>
 
@@ -683,7 +753,7 @@ const G = (() => {
     if (start === null && after.ids.length === 0 && withs.ids.length === 0) throw new Error('needs `start:` (fixed date), `after:` (when other tasks end) or `with:` (when they start)');
     if (start !== null && offset !== 0) throw new Error('an offset has no effect when `start:` anchors the task — drop one of them');
     const tags = attrs.tags === undefined ? [] : [...new Set(attrs.tags.split(',').map((x) => x.trim()).filter(Boolean))];
-    return { id: attrs.id, name, done: t[2] === 'x' || t[2] === 'X', box: t[2] !== undefined, indent: t[1], start, after: after.ids, with: withs.ids, offset, dur, tags, links };
+    return { id: attrs.id, name, done: t[2] === 'x' || t[2] === 'X', box: t[2] !== undefined, indent: t[1], start, after: after.ids, with: withs.ids, offset, dur, tags, links, desc: '', descIndent: null };
   };
 
   const tasksOf = (doc) => doc.items.filter((i) => i.kind === 'task').map((i) => i.task);
@@ -721,17 +791,39 @@ const G = (() => {
   };
   const prefsOf = (doc) => (doc.items.find((i) => i.kind === 'title') || { prefs: {} }).prefs;
 
+  /* A task's description: a ```md fence on the line right after it. Everything inside belongs to the
+     description (headings and lists too), up to a backtick-only line at least as long as the opener. */
+  const DESC_OPEN = /^(\s*)(`{3,})md\s*$/;
+  const FENCE_ONLY = /^\s*(`{3,})\s*$/;
   const parse = (md) => {
     if (typeof md !== 'string') throw new Error('bug: parse expects a string');
-    const items = md.split('\n').map((text, i) => {
+    const lines = md.split('\n');
+    const items = [];
+    for (let i = 0; i < lines.length; i++) {
+      const text = lines[i];
       const line = i + 1;
       const h = /^(#{1,2})\s+(.*)$/.exec(text);
-      if (h && h[1] === '#') return { kind: 'title', ...parseTitle(h[2]), line };
-      if (h) return { kind: 'group', text: h[2].trim(), line };
+      if (h && h[1] === '#') { items.push({ kind: 'title', ...parseTitle(h[2]), line }); continue; }
+      if (h) { items.push({ kind: 'group', text: h[2].trim(), line }); continue; }
       const t = TASK_RE.exec(text);
-      if (!t || !t[3].includes('`id:')) return { kind: 'raw', text, line };
-      return { kind: 'task', line, task: at(line, () => parseTask(t)) };
-    });
+      if (!t || !t[3].includes('`id:')) { items.push({ kind: 'raw', text, line }); continue; }
+      const task = at(line, () => parseTask(t));
+      const f = DESC_OPEN.exec(lines[i + 1] ?? '');
+      if (f) {
+        const body = [];
+        let j = i + 2;
+        for (; j < lines.length; j++) {
+          const c = FENCE_ONLY.exec(lines[j]);
+          if (c && c[1].length >= f[2].length) break;
+          body.push(lines[j].startsWith(f[1]) ? lines[j].slice(f[1].length) : lines[j].trimStart());
+        }
+        if (j === lines.length) throw parseError(line + 1, `the description of "${task.id}" is never closed — end it with a ${f[2]} line`);
+        task.desc = body.join('\n');
+        task.descIndent = f[1];
+        i = j;
+      }
+      items.push({ kind: 'task', line, task });
+    }
     const seen = new Map();
     items.filter((i) => i.kind === 'task').forEach(({ task, line }) => {
       if (seen.has(task.id)) throw parseError(line, `duplicate id "${task.id}" (first used on line ${seen.get(task.id)})`);
@@ -756,7 +848,15 @@ const G = (() => {
     attrs.push(`\`dur:${t.dur}d\``);
     if (t.tags.length) attrs.push(`\`tags:${t.tags.join(',')}\``);
     const links = t.links.map((l) => ` [${l.label}](${l.url})`).join('');
-    return `${t.indent}- ${t.box ? `[${t.done ? 'x' : ' '}] ` : ''}${t.name} ${attrs.join(' ')}${links}`;
+    return [`${t.indent}- ${t.box ? `[${t.done ? 'x' : ' '}] ` : ''}${t.name} ${attrs.join(' ')}${links}`, ...descLines(t)].join('\n');
+  };
+  /* The fence is one backtick longer than any backtick-only line in the description, so it can't close early. */
+  const descLines = (t) => {
+    if (!t.desc || t.desc.trim() === '') return [];
+    const body = t.desc.split('\n');
+    const fence = '`'.repeat(Math.max(2, ...body.map((l) => (FENCE_ONLY.exec(l) || ['', ''])[1].length)) + 1);
+    const ind = t.descIndent ?? `${t.indent}  `;
+    return [`${ind}${fence}md`, ...body.map((l) => (l === '' ? '' : ind + l)), ind + fence];
   };
   const serialize = (doc) => doc.items.map((i) => {
     if (i.kind === 'title') return [`# ${i.text}`, ...PREF_KEYS.filter((k) => i.prefs[k]).map((k) => `\`${k}:${i.prefs[k]}\``)].join(' ');
@@ -812,7 +912,7 @@ const G = (() => {
     return { start: idx, end: next < 0 ? doc.items.length : next };
   };
   const sectionTaskIds = (doc, idx) => { const r = sectionRange(doc, idx); return new Set(doc.items.slice(r.start + 1, r.end).filter((i) => i.kind === 'task').map((i) => i.task.id)); };
-  const newTask = (doc, fields) => ({ kind: 'task', line: null, task: { id: nextId(doc), name: 'New task', done: false, box: true, indent: '', offset: 0, dur: 3, with: [], tags: [], links: [], ...fields } });
+  const newTask = (doc, fields) => ({ kind: 'task', line: null, task: { id: nextId(doc), name: 'New task', done: false, box: true, indent: '', offset: 0, dur: 3, with: [], tags: [], links: [], desc: '', descIndent: null, ...fields } });
 
   /* Rows of the task column: one per section heading and task, in document order. */
   const layout = (doc) => doc.items.reduce((acc, it, idx) => {
@@ -1032,6 +1132,9 @@ const pick = (v, ids, dflt) => (ids.includes(v) ? v : dflt);
 const SAVES_KEY = 'gantt:saves';
 const readSaves = () => { try { const v = JSON.parse(localStorage.getItem(SAVES_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } };
 const writeSaves = (saves) => localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+/* Autosave to the served file (on unless switched off in this browser). */
+const AUTOSAVE_KEY = 'gantt:autosave';
+const storedAutosave = () => { try { return localStorage.getItem(AUTOSAVE_KEY) !== '0'; } catch (e) { return true; } };
 /* The markdown panel's width, remembered in this browser and kept between 240px and leaving the timeline 320px. */
 const MD_W_KEY = 'gantt:md-width';
 const clampMdW = (w) => Math.round(Math.max(240, Math.min(w, window.innerWidth - 320)));
@@ -1060,6 +1163,233 @@ const planLink = async (md) => {
   const qs = q.toString();
   return location.origin + location.pathname + (qs ? '?' + qs : '') + '#md=' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
+/* ---------- Task description markdown (from agile/Main.dc.html): a small, safe renderer (no HTML, data only),
+   and the editor's pure (text, selection) -> (text, selection) transforms. ---------- */
+const bug = (msg) => { throw new Error(`bug: ${msg}`); };
+
+const MD_LIST = /^(\s*)([-*+]|\d+[.)])\s+(?:\[( |x|X)\]\s+)?(.*)$/;
+const MD_FENCE = /^\s*(`{3,}|~{3,})/;
+const MD_HEADING = /^(#{1,6})\s+(.*)$/;
+const MD_RULE = /^\s{0,3}([-*_])(\s*\1){2,}\s*$/;
+const MD_QUOTE = /^\s*>/;
+const isMdBlockStart = (l) => MD_FENCE.test(l) || MD_HEADING.test(l) || MD_RULE.test(l) || MD_QUOTE.test(l) || MD_LIST.test(l);
+
+/**
+ * Block = { type: 'para'|'heading'|'quote'|'code'|'rule'|'list', text?, level?,
+ *           items?: [{ indent, marker, check: null|boolean, text, line }] }.
+ * `line` is the item's 0-based line in `text`, so a checkbox click can flip exactly that line.
+ */
+function parseMarkdown(text) {
+  const lines = text.split('\n');
+  const blocks = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    let m;
+    if (line.trim() === '') { i++; continue; }
+    if ((m = MD_FENCE.exec(line)) !== null) {
+      const close = new RegExp(`^\\s*\\${m[1][0]}{${m[1].length},}\\s*$`);
+      const body = [];
+      i++;
+      while (i < lines.length && !close.test(lines[i])) { body.push(lines[i]); i++; }
+      i++;
+      blocks.push({ type: 'code', text: body.join('\n') });
+      continue;
+    }
+    if ((m = MD_HEADING.exec(line)) !== null) { blocks.push({ type: 'heading', level: m[1].length, text: m[2].replace(/\s+#+\s*$/, '') }); i++; continue; }
+    if (MD_RULE.test(line)) { blocks.push({ type: 'rule' }); i++; continue; }
+    if (MD_QUOTE.test(line)) {
+      const body = [];
+      while (i < lines.length && MD_QUOTE.test(lines[i])) { body.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
+      blocks.push({ type: 'quote', text: body.join('\n') });
+      continue;
+    }
+    if (MD_LIST.test(line)) {
+      const items = [];
+      while (i < lines.length) {
+        const lm = MD_LIST.exec(lines[i]);
+        if (lm !== null) {
+          items.push({ indent: lm[1].replace(/\t/g, '  ').length, marker: lm[2], check: lm[3] === undefined ? null : lm[3] !== ' ', text: lm[4], line: i });
+          i++;
+          continue;
+        }
+        if (lines[i].trim() !== '' && /^\s+/.test(lines[i])) { items[items.length - 1].text += `\n${lines[i].trim()}`; i++; continue; }
+        break;
+      }
+      blocks.push({ type: 'list', items });
+      continue;
+    }
+    const body = [];
+    while (i < lines.length && lines[i].trim() !== '' && (body.length === 0 || !isMdBlockStart(lines[i]))) { body.push(lines[i]); i++; }
+    blocks.push({ type: 'para', text: body.join('\n') });
+  }
+  return blocks;
+}
+
+const safeHref = (url) => (/^(https?:\/\/|mailto:)/i.test(url) ? url : null);
+
+/** Inline markdown -> flat spans { text, bold, italic, strike, code, href }. Escapes with backslash. */
+function parseInline(text, flags) {
+  const base = flags ?? { bold: false, italic: false, strike: false, code: false, href: null };
+  const out = [];
+  let buf = '';
+  let i = 0;
+  const flush = () => { if (buf !== '') { out.push({ ...base, text: buf }); buf = ''; } };
+  while (i < text.length) {
+    const rest = text.slice(i);
+    const prev = i === 0 ? '' : text[i - 1];
+    let m;
+    if (rest[0] === '\\' && rest.length > 1 && /[\\`*_~[\]()#>!-]/.test(rest[1])) { buf += rest[1]; i += 2; continue; }
+    if ((m = /^`([^`]+)`/.exec(rest)) !== null) { flush(); out.push({ ...base, code: true, text: m[1] }); i += m[0].length; continue; }
+    if ((m = /^\[([^\]]+)\]\(([^)\s]+)\)/.exec(rest)) !== null) {
+      flush();
+      out.push(...parseInline(m[1], { ...base, href: safeHref(m[2]) }));
+      i += m[0].length;
+      continue;
+    }
+    if ((m = /^\*\*\*(?=\S)([\s\S]*?\S)\*\*\*/.exec(rest)) !== null) { flush(); out.push(...parseInline(m[1], { ...base, bold: true, italic: true })); i += m[0].length; continue; }
+    if ((m = /^(\*\*|__)(?=\S)([\s\S]*?\S)\1(?![*_])/.exec(rest)) !== null && !(m[1] === '__' && /\w/.test(prev))) { flush(); out.push(...parseInline(m[2], { ...base, bold: true })); i += m[0].length; continue; }
+    if ((m = /^~~(?=\S)([\s\S]*?\S)~~/.exec(rest)) !== null) { flush(); out.push(...parseInline(m[1], { ...base, strike: true })); i += m[0].length; continue; }
+    if ((m = /^(\*|_)(?=\S)([\s\S]*?\S)\1(?!\1)/.exec(rest)) !== null && !(m[1] === '_' && /\w/.test(prev))) { flush(); out.push(...parseInline(m[2], { ...base, italic: true })); i += m[0].length; continue; }
+    buf += rest[0];
+    i++;
+  }
+  flush();
+  return out;
+}
+
+/** Render-ready view of description markdown. `opts.links`: real anchors; `opts.onToggle(line)`: checkbox handler. */
+function markdownView(text, opts) {
+  const spans = (s) => parseInline(s).map((sp) => {
+    const cls = ['md-span', sp.bold ? 'md-b' : '', sp.italic ? 'md-i' : '', sp.strike ? 'md-s' : '', sp.code ? 'md-code' : '', sp.href !== null ? 'md-a' : ''].filter((c) => c !== '').join(' ');
+    const isLink = opts.links && sp.href !== null;
+    return { text: sp.text, cls, isLink, isPlain: !isLink, href: sp.href ?? '' };
+  });
+  return parseMarkdown(text).map((b) => ({
+    isPara: b.type === 'para', isHeading: b.type === 'heading', isQuote: b.type === 'quote', isCode: b.type === 'code', isRule: b.type === 'rule', isList: b.type === 'list',
+    spans: b.type === 'para' || b.type === 'heading' || b.type === 'quote' ? spans(b.text) : [],
+    text: b.type === 'code' ? b.text : '',
+    items: b.type !== 'list' ? [] : b.items.map((it) => {
+      const level = Math.min(Math.floor(it.indent / 2), 4);
+      return {
+        style: `padding-left: ${level * 16}px`,
+        isCheck: it.check !== null, isMarker: it.check === null, checked: it.check === true,
+        checkLabel: it.check === true ? 'Mark not done' : 'Mark done',
+        marker: /\d/.test(it.marker) ? it.marker.replace(')', '.') : level === 0 ? '•' : '◦',
+        bodyCls: it.check === true ? 'md-li-body md-done' : 'md-li-body',
+        spans: spans(it.text),
+        toggle: () => opts.onToggle(it.line),
+      };
+    }),
+  }));
+}
+
+function toggleCheckLine(text, line) {
+  const lines = text.split('\n');
+  if (line < 0 || line >= lines.length) bug(`checkbox line ${line} is outside the description`);
+  const m = /^(\s*(?:[-*+]|\d+[.)])\s+)\[( |x|X)\]/.exec(lines[line]);
+  if (m === null) bug(`line ${line} has no checkbox`);
+  lines[line] = `${m[1]}[${m[2] === ' ' ? 'x' : ' '}]${lines[line].slice(m[0].length)}`;
+  return lines.join('\n');
+}
+
+/* Editor formatting: pure (text, selection) -> (text, selection) transforms behind the toolbar and shortcuts. */
+
+const INLINE_MARKS = { bold: '**', italic: '*', strike: '~~', code: '`' };
+const LINE_FORMATS = {
+  heading: { re: /^#{1,6}\s+/, make: () => '### ' },
+  bullet: { re: /^(\s*)[-*+]\s+(?!\[[ xX]\]\s)/, make: (indent) => `${indent}- ` },
+  number: { re: /^(\s*)\d+[.)]\s+/, make: (indent, n) => `${indent}${n}. ` },
+  check: { re: /^(\s*)[-*+]\s+\[[ xX]\]\s+/, make: (indent) => `${indent}- [ ] ` },
+  quote: { re: /^>\s?/, make: () => '> ' },
+};
+const ANY_LINE_PREFIX = /^(\s*)(?:#{1,6}\s+|>\s?|[-*+]\s+\[[ xX]\]\s+|[-*+]\s+|\d+[.)]\s+)/;
+
+function applyFormat(text, start, end, kind) {
+  if (start > end) bug('selection start after end');
+  if (kind in INLINE_MARKS) {
+    const mark = INLINE_MARKS[kind];
+    let s = start;
+    let e = end;
+    while (s < e && /\s/.test(text[s])) s++;
+    while (e > s && /\s/.test(text[e - 1])) e--;
+    const n = mark.length;
+    const sel = text.slice(s, e);
+    const wrappedOutside = text.slice(s - n, s) === mark && text.slice(e, e + n) === mark
+      && !(kind === 'italic' && text[s - n - 1] === '*' && text[e + n] === '*' && text.slice(s - 3, s) !== '***');
+    if (wrappedOutside) return { text: text.slice(0, s - n) + sel + text.slice(e + n), start: s - n, end: e - n };
+    if (sel.length >= 2 * n && sel.startsWith(mark) && sel.endsWith(mark)) {
+      const inner = sel.slice(n, sel.length - n);
+      return { text: text.slice(0, s) + inner + text.slice(e), start: s, end: s + inner.length };
+    }
+    return { text: `${text.slice(0, s)}${mark}${sel}${mark}${text.slice(e)}`, start: s + n, end: e + n };
+  }
+  if (kind === 'link') {
+    const sel = text.slice(start, end);
+    if (sel === '') {
+      const ins = '[link text](https://)';
+      return { text: text.slice(0, start) + ins + text.slice(end), start: start + 1, end: start + 10 };
+    }
+    const ins = `[${sel}](https://)`;
+    const urlStart = start + sel.length + 3;
+    return { text: text.slice(0, start) + ins + text.slice(end), start: urlStart, end: urlStart + 8 };
+  }
+  const fmt = LINE_FORMATS[kind];
+  if (fmt === undefined) bug(`unknown format "${kind}"`);
+  const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+  const endAt = end > start && text[end - 1] === '\n' ? end - 1 : end;
+  const nl = text.indexOf('\n', endAt);
+  const lineEnd = nl === -1 ? text.length : nl;
+  const lines = text.slice(lineStart, lineEnd).split('\n');
+  const content = lines.filter((l) => l.trim() !== '');
+  const allHave = content.length > 0 && content.every((l) => fmt.re.test(l));
+  let n = 0;
+  const next = lines.map((l) => {
+    if (allHave) return l.replace(fmt.re, (all, indent) => (kind === 'heading' || kind === 'quote' ? '' : indent ?? ''));
+    if (l.trim() === '' && lines.length > 1) return l;
+    const pm = ANY_LINE_PREFIX.exec(l);
+    const indent = pm === null ? (/^\s*/.exec(l)[0]) : pm[1];
+    const body = pm === null ? l.trimStart() : l.slice(pm[0].length);
+    n++;
+    return fmt.make(kind === 'heading' || kind === 'quote' ? '' : indent, n) + body;
+  });
+  const block = next.join('\n');
+  const single = lines.length === 1 && start === end;
+  const caret = lineStart + block.length;
+  return { text: text.slice(0, lineStart) + block + text.slice(lineEnd), start: single ? caret : lineStart, end: caret };
+}
+
+/** Enter inside a list or quote line: continue it, or end it when the item is empty. null = not a list line. */
+function continueList(text, start, end) {
+  if (start !== end) return null;
+  const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+  const nl = text.indexOf('\n', start);
+  const line = text.slice(lineStart, nl === -1 ? text.length : nl);
+  const m = /^(\s*)(?:([-*+])|(\d+)([.)]))\s+(\[[ xX]\]\s+)?/.exec(line) ?? /^(>\s?)/.exec(line);
+  if (m === null) return null;
+  if (start < lineStart + m[0].length) return null;
+  if (line.slice(m[0].length).trim() === '') {
+    const t = text.slice(0, lineStart) + text.slice(lineStart + m[0].length);
+    return { text: t, start: lineStart, end: lineStart };
+  }
+  const prefix = m[0].startsWith('>') ? '> ' : `${m[1]}${m[2] !== undefined ? m[2] : `${Number(m[3]) + 1}${m[4]}`} ${m[5] !== undefined ? '[ ] ' : ''}`;
+  const ins = `\n${prefix}`;
+  return { text: text.slice(0, start) + ins + text.slice(end), start: start + ins.length, end: start + ins.length };
+}
+
+const FORMAT_BUTTONS = [
+  { kind: 'bold', label: 'Bold', keys: 'Ctrl/⌘ B', d: 'M7 5h6a3.5 3.5 0 0 1 0 7H7z M7 12h7a3.5 3.5 0 0 1 0 7H7z' },
+  { kind: 'italic', label: 'Italic', keys: 'Ctrl/⌘ I', d: 'M19 4h-9 M14 20H5 M15 4 9 20' },
+  { kind: 'strike', label: 'Strikethrough', keys: 'Ctrl/⌘ Shift X', d: 'M16 5H10a3 3 0 0 0-1 5.8 M14 12a3.5 3.5 0 0 1-1 7H7 M4 12h16' },
+  { kind: 'code', label: 'Inline code', keys: 'Ctrl/⌘ E', d: 'm16 18 6-6-6-6 M8 6l-6 6 6 6' },
+  { kind: 'link', label: 'Link', keys: 'Ctrl/⌘ K', d: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7 M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7', sep: true },
+  { kind: 'heading', label: 'Heading', keys: '', d: 'M6 4v16 M18 4v16 M6 12h12' },
+  { kind: 'bullet', label: 'Bulleted list', keys: '', d: 'M9 6h12 M9 12h12 M9 18h12 M4 6h.01 M4 12h.01 M4 18h.01' },
+  { kind: 'number', label: 'Numbered list', keys: '', d: 'M10 6h11 M10 12h11 M10 18h11 M4 4h1v5 M4 9h2 M6 19H4c0-1.5 2-2 2-3.3 0-.8-.6-1.2-1.2-1.2-.6 0-1 .3-1.2.8' },
+  { kind: 'check', label: 'Checklist', keys: '', d: 'm3 6 2 2 3-3 M3 16l2 2 3-3 M12 7h9 M12 17h9' },
+  { kind: 'quote', label: 'Quote', keys: '', d: 'M4 5v14 M9 7h11 M9 12h11 M9 17h7' },
+];
+
 const REL_TEXT = 'var(--on-rel)';
 const FIX_TEXT = 'var(--on-fixed)';
 
@@ -1073,6 +1403,8 @@ class Component extends DCLogic {
     linkName: '', linkUrl: '', linkError: '',
     titleEditing: false, titleDraft: '', tagDraft: '', tagsOpen: false,
     fileOpen: false, linkNote: null, saveUrl: BOOT.writable ? new URL(BOOT.src, location.href).href : null, saveOpen: false, saveName: '', saveError: '', savedName: null,
+    /* fileMd: the text known to be in the served file; autosave PUTs whenever the plan differs from it. */
+    fileMd: START.md, autosave: storedAutosave(), saveFailed: false,
     tagFilter: (QUERY.get('tags') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
     openOpen: START.error !== null, openUrl: '', openError: START.error ?? '', openBusy: false, dropActive: false,
     selectedId: QUERY.get('task'), drag: null, reorder: null, newGroupIdx: null,
@@ -1080,6 +1412,7 @@ class Component extends DCLogic {
     confirm: null, policy: 'unlink', sectionMode: 'keep',
     editing: false, draft: '', copied: null, nameError: null,
     mdW: clampMdW(storedMdW()), mdResize: null,
+    descTab: 'preview',
   };
 
   /** Theme and view to switch to when the plan's own preferences change from `prev` to `next` (all of them when prev is null). */
@@ -1122,7 +1455,7 @@ class Component extends DCLogic {
     }
     const md = G.serialize(doc);
     this.setState({
-      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, saveUrl: fromUrl && writable ? new URL(label, location.href).href : null, savedName: null,
+      doc, past: [], future: [], prevMd: md, baseMd: md, lastKey: null, srcLabel: label, srcParam: fromUrl ? label : null, saveUrl: fromUrl && writable ? new URL(label, location.href).href : null, savedName: null, fileMd: md, saveFailed: false,
       selectedId: null, drag: null, reorder: null, confirm: null, editing: false, draft: '', copied: `Opened ${label}`, nameError: null,
       openOpen: false, openBusy: false, openError: '', openUrl: '', dropActive: false, ...this.prefState(null, doc),
     });
@@ -1177,14 +1510,65 @@ class Component extends DCLogic {
     const label = (this.state.linkName.trim() || url.hostname).replace(/[\[\]`]/g, '');
     this.commit(G.ops.addLink(this.state.doc, id, label, url.href.replace(/[()\s]/g, encodeURIComponent)), null, { linkName: '', linkUrl: '', linkError: '' });
   }
-  /* Save to the file itself, when the local `gantt` server said it may be written (x-agile-writable). */
-  saveFile(md) {
+  /* Save to the file itself, when the local `gantt` server said it may be written (x-agile-writable).
+     `auto` is a quiet autosave; `keepalive` lets the write outlive a closing tab (bodies up to 64KB). */
+  saveFile(md, auto = false, keepalive = false) {
     const s = this.state;
     if (s.saveUrl === null) return;
-    fetch(s.saveUrl, { method: 'PUT', body: md, headers: { 'content-type': 'text/markdown;charset=utf-8' } }).then((res) => {
+    const url = s.saveUrl;
+    fetch(url, { method: 'PUT', body: md, keepalive, headers: { 'content-type': 'text/markdown;charset=utf-8' } }).then((res) => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      this.setState({ baseMd: md, savedName: null, fileOpen: false, copied: `Saved ${s.srcLabel}` });
-    }).catch((e) => this.setState({ linkNote: { text: `Couldn’t save ${s.srcLabel}: ${e.message}. Download it instead.`, bad: true } }));
+      if (this.state.saveUrl !== url) return; /* another plan was opened meanwhile */
+      this.setState({ baseMd: md, fileMd: md, saveFailed: false, savedName: null, ...(auto ? {} : { fileOpen: false, copied: `Saved ${s.srcLabel}` }) });
+    }).catch((e) => this.setState(auto
+      ? { saveFailed: true, copied: `Couldn’t autosave ${s.srcLabel}: ${e.message}. It retries on your next edit; Download keeps a copy.` }
+      : { saveFailed: true, linkNote: { text: `Couldn’t save ${s.srcLabel}: ${e.message}. Download it instead.`, bad: true } }));
+  }
+  /* Autosave: 800ms after the last edit, and on pagehide so closing the tab inside that window still writes.
+     queuedMd is the text last scheduled, so a failed write waits for the next edit instead of looping. */
+  timer = null;
+  queuedMd = null;
+  flushSave = () => { if (this.timer !== null) { clearTimeout(this.timer); this.timer = null; this.saveFile(this.queuedMd, true, true); } };
+  componentDidMount() { window.addEventListener('pagehide', this.flushSave); }
+  componentWillUnmount() { clearTimeout(this.timer); window.removeEventListener('pagehide', this.flushSave); }
+  componentDidUpdate() {
+    const s = this.state;
+    const md = s.saveUrl !== null && s.autosave ? G.serialize(s.doc) : null;
+    if (md === this.queuedMd) return;
+    clearTimeout(this.timer); this.timer = null; this.queuedMd = md;
+    if (md !== null && md !== s.fileMd) this.timer = setTimeout(() => { this.timer = null; this.saveFile(md, true); }, 800);
+  }
+  /* Description editor: toolbar, shortcuts and list continuation, then the caret goes back where the edit left it. */
+  setDesc(id, res) {
+    this.commit(G.ops.patch(this.state.doc, id, { desc: res.text }), `desc:${id}`);
+    setTimeout(() => { const el = document.getElementById('insp-desc'); if (el) { el.focus(); el.setSelectionRange(res.start, res.end); } });
+  }
+  formatDesc(id, kind) {
+    const el = document.getElementById('insp-desc');
+    if (el === null) bug('format button pressed with no description editor on screen');
+    this.setDesc(id, applyFormat(el.value, el.selectionStart, el.selectionEnd, kind));
+  }
+  descKey(e, id) {
+    const el = e.target;
+    const key = e.key.toLowerCase();
+    if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+      const kind = e.shiftKey ? (key === 'x' ? 'strike' : null) : ({ b: 'bold', i: 'italic', e: 'code', k: 'link' })[key] ?? null;
+      if (kind === null) return;
+      e.preventDefault();
+      this.setDesc(id, applyFormat(el.value, el.selectionStart, el.selectionEnd, kind));
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
+      const res = continueList(el.value, el.selectionStart, el.selectionEnd);
+      if (res === null) return;
+      e.preventDefault();
+      this.setDesc(id, res);
+    }
+  }
+  toggleAutosave() {
+    const on = !this.state.autosave;
+    try { localStorage.setItem(AUTOSAVE_KEY, on ? '1' : '0'); } catch (e) { /* not remembered next time */ }
+    this.setState({ autosave: on });
   }
   /* The card designer, in a new tab so unsaved edits here survive: the plan goes along as ?src= or, when edited, as #md=. */
   designCard(md) {
@@ -1549,6 +1933,23 @@ class Component extends DCLogic {
           if (!v.trim()) { this.setState({ nameError: 'A task needs a name.' }); return; }
           this.commit(G.ops.patch(s.doc, selT.id, { name: v }), `name:${selT.id}`, { nameError: null });
         },
+        desc: selT.desc, isWrite: s.descTab === 'write', isPreview: s.descTab === 'preview',
+        showWrite: () => this.setState({ descTab: 'write' }),
+        showPreview: () => this.setState({ descTab: 'preview' }),
+        editFromPreview: (e) => {
+          if (e.target.closest('a,input')) return; /* links open, checkboxes tick */
+          this.setState({ descTab: 'write' });
+          setTimeout(() => { const el = document.getElementById('insp-desc'); if (el) el.focus(); });
+        },
+        onDesc: (e) => this.commit(G.ops.patch(s.doc, selT.id, { desc: e.target.value }), `desc:${selT.id}`),
+        onDescKey: (e) => this.descKey(e, selT.id),
+        formatButtons: FORMAT_BUTTONS.map((fb) => ({
+          cls: fb.sep === true ? 'kb-fmt kb-fmt-sep' : 'kb-fmt', label: fb.label, title: fb.keys ? `${fb.label} (${fb.keys})` : fb.label, d: fb.d,
+          keepFocus: (e) => e.preventDefault(), /* the textarea keeps its selection */
+          apply: () => this.formatDesc(selT.id, fb.kind),
+        })),
+        preview: markdownView(selT.desc, { links: true, onToggle: (line) => this.commit(G.ops.patch(s.doc, selT.id, { desc: toggleCheckLine(selT.desc, line) }), null) }),
+        previewEmpty: selT.desc.trim() === '',
         isFixed: fixed, isRel: !fixed,
         relDisabled: G.depsOf(selT).length === 0, relHint: G.depsOf(selT).length ? 'Follow dependencies' : 'Add a dependency first',
         relPressed: fixed ? 'false' : 'true', fixedPressed: fixed ? 'true' : 'false',
@@ -1559,7 +1960,7 @@ class Component extends DCLogic {
         onStart: (e) => { if (e.target.value) this.commit(G.ops.patch(s.doc, selT.id, { start: G.dayFromIso(e.target.value) }), `start:${selT.id}`); },
         offset: String(selT.offset),
         onOffset: (e) => { const n = intNum(e); if (n !== null) this.commit(G.ops.patch(s.doc, selT.id, { offset: n }), `offset:${selT.id}`); },
-        syntax: (G.serialize({ items: [{ kind: 'task', task: { ...selT, indent: '', box: false } }] }).match(/`(start|after|with):[^`]*`/g) || []).join(' '),
+        syntax: (G.serialize({ items: [{ kind: 'task', task: { ...selT, indent: '', box: false, desc: '' } }] }).match(/`(start|after|with):[^`]*`/g) || []).join(' '),
         depsTitle: fixed ? 'Must be ready first (checked, doesn’t move it)' : 'Follows',
         /* Each dependency anchors to the other task's end (after:) or its start (with:); the chip's toggle switches it. */
         deps: [...selT.after.map((d) => ({ d, kind: 'after' })), ...selT.with.map((d) => ({ d, kind: 'with' }))].map(({ d, kind }) => ({
@@ -1682,7 +2083,11 @@ class Component extends DCLogic {
 
     /* Markdown pane. */
     const changed = G.changedLines(s.prevMd, md);
-    const selLine = sel ? s.doc.items.findIndex((i) => i.kind === 'task' && i.task.id === sel) : -1;
+    const selLine = (() => {
+      let n = 0;
+      for (const i of s.doc.items) { if (i.kind === 'task' && i.task.id === sel) return n; n += G.serialize({ items: [i] }).split('\n').length; }
+      return -1;
+    })();
     const mdLines = md.split('\n').map((text, i) => ({
       n: i + 1,
       mark: changed[i] && s.past.length ? '●' : '',
@@ -1704,7 +2109,8 @@ class Component extends DCLogic {
     const seg = (on) => ({ bg: on ? 'var(--ink)' : 'transparent', fg: on ? 'var(--on-ink)' : 'var(--ink-2)', pressed: on ? 'true' : 'false' });
     const zd = seg(s.zoom === 'day'); const zw = seg(s.zoom === 'week');
     const vc = seg(s.layout === 'chart'); const vsp = seg(s.layout === 'split');
-    const dirty = md !== s.baseMd;
+    const toFile = s.saveUrl !== null;
+    const dirty = md !== (toFile ? s.fileMd : s.baseMd);
     const title = (s.doc.items.find((i) => i.kind === 'title') || { text: 'Untitled plan' }).text;
     /* Named after the plan's title, minus characters file systems reject. */
     const fileName = `${title.replace(/[\\/:*?"<>|\x00-\x1f]/g, '').trim() || 'plan'}.md`;
@@ -1754,10 +2160,11 @@ class Component extends DCLogic {
       onOpenUrlKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.openUrl(); } },
       openFromUrl: () => this.openUrl(),
       /* Compared with the last save in this browser, or with the file as loaded. */
-      statusLabel: dirty ? 'Unsaved changes' : s.savedName !== null ? `Saved as “${s.savedName}”` : 'No unsaved changes',
-      statusTip: dirty
-        ? (s.saveUrl !== null ? 'Changes are only in this tab. File → Save writes them to the file.' : 'Changes are only in this tab. Save keeps them in this browser; Download or Copy keeps the file.')
-        : s.savedName !== null ? `Matches the save “${s.savedName}” in this browser.` : 'Matches the plan as it was opened.',
+      statusLabel: toFile && s.saveFailed ? 'Not saved' : dirty ? (toFile && s.autosave ? 'Saving…' : 'Unsaved changes') : s.savedName !== null ? `Saved as “${s.savedName}”` : toFile ? 'Saved' : 'No unsaved changes',
+      statusTip: toFile && s.saveFailed ? 'The last write to the file failed. Autosave retries on your next edit; File → Save tries now.'
+        : dirty
+        ? (toFile ? (s.autosave ? 'Autosave is writing your changes to the file.' : 'Changes are only in this tab. File → Save writes them to the file, or switch Autosave on.') : 'Changes are only in this tab. Save keeps them in this browser; Download or Copy keeps the file.')
+        : s.savedName !== null ? `Matches the save “${s.savedName}” in this browser.` : toFile ? 'Matches the file.' : 'Matches the plan as it was opened.',
       saveOpen: s.saveOpen, saveName: s.saveName, saveError: s.saveError, hasSaveError: s.saveError !== '',
       saveExists: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()),
       saveLabel: Object.prototype.hasOwnProperty.call(readSaves(), s.saveName.trim()) ? 'Replace' : 'Save',
@@ -1767,6 +2174,7 @@ class Component extends DCLogic {
       onFileKey: (e) => { if (e.key === 'Escape') { e.stopPropagation(); this.setState({ fileOpen: false, saveOpen: false }); } else if (e.key === 'Enter' && e.target.id === 'save-name') { e.preventDefault(); this.saveLocal(); } },
       copyLink: () => this.copyLink(md),
       canSaveFile: s.saveUrl !== null, saveFileName: s.srcLabel.split('/').pop(), saveFile: () => this.saveFile(md),
+      autosaveOn: String(s.autosave), autosaveLabel: s.autosave ? 'On' : 'Off', toggleAutosave: () => this.toggleAutosave(),
       designCard: () => this.designCard(md),
       hasLinkNote: s.linkNote !== null, linkNote: s.linkNote?.text ?? '', linkNoteColor: s.linkNote?.bad ? 'var(--bad)' : 'var(--muted)',
       toggleSave: () => this.setState({ saveOpen: !s.saveOpen, saveError: '', saveName: s.saveName || s.savedName || title }),

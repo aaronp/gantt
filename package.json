@@ -21,7 +21,7 @@
     "spec.md"
   ],
   "scripts": {
-    "test": "node --test card.test.mjs"
+    "test": "node --test card.test.mjs core.test.mjs"
   },
   "publishConfig": {
     "access": "public"
